@@ -1,6 +1,6 @@
 import { User } from '../models/user';
 import { connection } from '../config/db';
-import { QueryError, PoolConnection } from 'mysql2';
+import { QueryError, PoolConnection, OkPacket } from 'mysql2';
 
 const selectAll = (): Promise<User[]> => {
     return new Promise((resolve, reject) => {
@@ -24,7 +24,7 @@ const addUser = (newUser: User): Promise<number> => {
                 return reject(err);
             }
 
-            conn.query("INSERT INTO users SET ?", newUser, (err, result) => {
+            conn.query("INSERT INTO users SET ?", newUser, (err, result: OkPacket) => {
                 conn.release();
                 if (err) {
                     return reject(err);
@@ -35,54 +35,42 @@ const addUser = (newUser: User): Promise<number> => {
     });
 };
 
-// function addUser(username: string, email: string, password: string, role_id: number): void {
-//     const query = 'INSERT INTO users (username, email, password, role_id) VALUES (?, ?, ?, ?)';
+const updateUser = (userId: number, updatedUser: User): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
 
-//     connection.getConnection((err: QueryError, conn: PoolConnection) => {
-//         conn.query(query, [username, email, password, role_id], (err) => {
-//             if (err) {
-//                 console.error('Error inserting user data:', err);
-//             } else {
-//                 console.log('User data inserted successfully.');
-//             }
-//         });
-//     });
+            conn.query("UPDATE users SET ? WHERE id = ?", [updatedUser, userId], (err, result: OkPacket) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(result.affectedRows > 0);
+            });
+        });
+    });
+};
 
-// }
+const deleteUser = (userId: number): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
 
-// export function updatePassword(username: string, newPassword: string): void {
-//     const query = 'UPDATE users SET `password` = ? WHERE username = ?';
+            conn.query("DELETE FROM users WHERE id = ?", userId, (err, result: OkPacket) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(result.affectedRows > 0);
+            });
+        });
+    });
+};
 
-//     db.query(query, [newPassword, username], (error, results) => {
-//         if (error) {
-//             console.error('Error updating password:', error);
-//         } else {
-//             console.log('Password updated successfully.');
-//         }
-//     });
-// }
-
-// export function getTableData(statement: string): Promise<any[]> {
-//     return new Promise((resolve, reject) => {
-//         const query = statement;
-//         const tableData: any[] = [];
-
-//         db.query(query, (error, result) => {
-//             if (error) {
-//                 console.error(error);
-//                 reject(error);
-//             } else {
-//                 console.log('Table Found');
-//                 const data = <RowDataPacket[]>result;
-
-//                 for (let i = 0; i < data.length; i++) {
-//                     tableData.push(data[i]);
-//                 }
-
-//                 resolve(tableData);
-//             }
-//         });
-//     });
-// }
-
-export default { selectAll, addUser };
+export default { selectAll, addUser, updateUser, deleteUser };

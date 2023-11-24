@@ -2,9 +2,24 @@ import { User } from '../models/user';
 import { connection } from '../config/db';
 import { QueryError, PoolConnection, OkPacket } from 'mysql2';
 
+const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};
+
+const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+};
+
 const selectAll = (): Promise<User[]> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
             conn.query("select * from users", (err, resultSet: User[]) => {
                 conn.release();
                 if (err) {
@@ -14,7 +29,32 @@ const selectAll = (): Promise<User[]> => {
             });
         });
     });
-}
+};
+
+const getUserById = (userId: number): Promise<User | null> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
+            conn.query("SELECT * FROM users WHERE id = ?", [userId], (err, result) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+
+                if (Array.isArray(result) && result.length === 0) {
+                    return resolve(null); // User not found
+                }
+
+                const user: User = result[0] as User; // Assuming result[0] is of type User
+                return resolve(user);
+            });
+        });
+    });
+};
 
 const addUser = (newUser: User): Promise<number> => {
     return new Promise((resolve, reject) => {
@@ -73,4 +113,4 @@ const deleteUser = (userId: number): Promise<boolean> => {
     });
 };
 
-export default { selectAll, addUser, updateUser, deleteUser };
+export default { validateEmail, validatePassword, selectAll, getUserById, addUser, updateUser, deleteUser };

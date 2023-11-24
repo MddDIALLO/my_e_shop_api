@@ -44,6 +44,18 @@ const getUserById = async (req: Request, res: Response) => {
 const addNewUser = async (req: Request, res: Response) => {
     try {
         const { username, email, password, role_id } = req.body;
+
+        const exitingUsername: User | null = await user.getUserByUsernameOrEmail(username);
+        const exitingEmail: User | null = await user.getUserByUsernameOrEmail(email);
+
+        if(exitingUsername) {
+            return res.status(400).send({ message: 'Username already used' });
+        }
+
+        if(exitingEmail) {
+            return res.status(400).send({ message: 'Email already used' });
+        }
+
         const newUser: User = {
             id: 0,
             username: '',
@@ -154,7 +166,7 @@ const updateExistingUser = async (req: Request, res: Response) => {
 
         if(role_id) {
             if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
-                updatedUser.role_id = role_id;
+                updatedUser.role_id = parseInt(role_id, 10);
             } else {
                 return res.status(400).send({ message: 'Invalid role' });
             }
@@ -162,9 +174,6 @@ const updateExistingUser = async (req: Request, res: Response) => {
 
         updatedUser.updated_by = userId;
         updatedUser.updated_date = new Date();
-
-        console.log(userId);
-        console.log(updatedUser);
 
         const updated = await user.updateUser(userId, updatedUser);
 

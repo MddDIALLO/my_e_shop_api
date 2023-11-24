@@ -56,6 +56,36 @@ const getUserById = (userId: number): Promise<User | null> => {
     });
 };
 
+const getUserByUsernameOrEmail = (identifier: string): Promise<User | null> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
+            conn.query(
+                "SELECT * FROM users WHERE username = ? OR email = ?",
+                [identifier, identifier],
+                (err, result) => {
+                    conn.release();
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    if (Array.isArray(result) && result.length === 0) {
+                        return resolve(null); // User not found
+                    }
+
+                    const user: User = result[0] as User; // Assuming result[0] is of type User
+                    return resolve(user);
+                }
+            );
+        });
+    });
+};
+
+
 const addUser = (newUser: User): Promise<number> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
@@ -113,4 +143,4 @@ const deleteUser = (userId: number): Promise<boolean> => {
     });
 };
 
-export default { validateEmail, validatePassword, selectAll, getUserById, addUser, updateUser, deleteUser };
+export default { validateEmail, validatePassword, selectAll, getUserById, getUserByUsernameOrEmail, addUser, updateUser, deleteUser };

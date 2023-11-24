@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "npm run serve",
+    "start": "npx nodemon ./index.ts",
     "dev": "concurrently \"npm run build:watch\" \"npm run serve:watch\"",
     "serve": "node dist/index.ts",
     "serve:watch": "nodemon dist/index.ts",

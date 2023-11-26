@@ -1,12 +1,17 @@
 import { Router } from 'express';
 import userController from '../controllers/user.controller';
+import authenticateToken from '../middleware/auth';
+import isAdmin from '../middleware/admin';
+import isAuth from '../middleware/userAdmin';
+import isAuthToManRole from '../middleware/userRoleMan';
 
 const userRouter = Router();
 
-userRouter.get('/', userController.getAll);
-userRouter.get('/:id', userController.getUserById);
-userRouter.post('/', userController.addNewUser);
-userRouter.put('/:id', userController.updateExistingUser);
-userRouter.delete('/:id', userController.deleteUserById);
+userRouter.post('/login', userController.login);
+userRouter.get('/', authenticateToken, isAdmin, userController.getAll);
+userRouter.get('/:id', authenticateToken, isAuth, userController.getUserById);
+userRouter.post('/', isAuthToManRole, userController.addNewUser);
+userRouter.put('/:id', authenticateToken, isAuth, isAuthToManRole, userController.updateExistingUser);
+userRouter.delete('/:id', authenticateToken, isAuth, userController.deleteUserById);
 
 export default userRouter;

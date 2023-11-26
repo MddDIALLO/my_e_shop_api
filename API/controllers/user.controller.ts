@@ -1,12 +1,65 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+import { Request, Response } from 'express';
 import user from '../db/user';
 import { User } from '../models/user';
-import { Request, Response } from 'express';
+
+const login = async (req: Request, res: Response) => {
+    try {
+        const { username, email, password } = req.body;
+        let existingUser: User | null = {
+            id: 0,
+            username: '',
+            email: '',
+            password: '',
+            role_id: 2,
+            created_by: 1,
+            updated_by: 1,
+            created_date: new Date(),
+            updated_date: new Date()
+        };
+
+        if(username) {
+            existingUser = await user.getUserByUsernameOrEmail(username);
+        } else if(email){
+            existingUser = await user.getUserByUsernameOrEmail(email);
+        }
+
+        if (!existingUser || existingUser.id === 0) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).send({ message: 'Invalid credentials' });
+        }
+
+        const tokenPayload = {
+            id: existingUser.id,
+            username: existingUser.username,
+            email: existingUser.email,
+            role_id: existingUser.role_id
+        };
+
+        console.log("tokenPayload: ", tokenPayload);
+
+        const token = jwt.sign(tokenPayload, 'your_secret_key', { expiresIn: '1h' });
+
+        res.status(200).send({
+            message: 'Login successful',
+            token: token
+        });
+    } catch (error) {
+        console.error('Error occurred:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+};
 
 const getAll = (req: Request, res: Response) => {
     user.selectAll().then(users => {
         res.status(200).send({
-            message: 'OK',
+            message: 'Users List',
             result: users
         })
     }).catch(err => {
@@ -44,6 +97,10 @@ const getUserById = async (req: Request, res: Response) => {
 const addNewUser = async (req: Request, res: Response) => {
     try {
         const { username, email, password, role_id } = req.body;
+
+        if(role_id && !req.isAuthToManRole) {
+            return res.status(403).send({ message: 'Access denied. You are not authorized to manage user role.' });
+        }
 
         const exitingUsername: User | null = await user.getUserByUsernameOrEmail(username);
         const exitingEmail: User | null = await user.getUserByUsernameOrEmail(email);
@@ -104,12 +161,19 @@ const addNewUser = async (req: Request, res: Response) => {
             return res.status(400).send({ message: 'Password is required' });
         }
 
-        if(role_id) {
-            if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
-                newUser.role_id = role_id;
-            } else {
-                return res.status(400).send({ message: 'Invalid role' });
+        if(req.isAuthToManRole) {
+            if(role_id) {
+                if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
+                    newUser.role_id = role_id;
+                } else {
+                    return res.status(400).send({ message: 'Invalid role' });
+                }
             }
+        }
+
+        if(req.user.id) {
+            newUser.created_by = req.user.id;
+            newUser.updated_by = req.user.id;
         }
 
         try {
@@ -132,6 +196,11 @@ const updateExistingUser = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.params.id);
         const { password, role_id } = req.body;
+
+        if(role_id && !req.isAuthToManRole) {
+            return res.status(403).send({ message: 'Access denied. You are not authorized to manage user role.' });
+        }
+
         let updatedUser: User = {
             id: 0,
             username: '',
@@ -164,15 +233,17 @@ const updateExistingUser = async (req: Request, res: Response) => {
             }
         }
 
-        if(role_id) {
-            if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
-                updatedUser.role_id = parseInt(role_id, 10);
-            } else {
-                return res.status(400).send({ message: 'Invalid role' });
+        if(req.isAuthToManRole) {
+            if(role_id) {
+                if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
+                    updatedUser.role_id = parseInt(role_id, 10);
+                } else {
+                    return res.status(400).send({ message: 'Invalid role' });
+                }
             }
         }
 
-        updatedUser.updated_by = userId;
+        updatedUser.updated_by = req.user.id;
         updatedUser.updated_date = new Date();
 
         const updated = await user.updateUser(userId, updatedUser);
@@ -210,4 +281,4 @@ const deleteUserById = async (req: Request, res: Response) => {
     }
 };
 
-export default { getAll, getUserById, addNewUser, updateExistingUser, deleteUserById };
+export default { login, getAll, getUserById, addNewUser, updateExistingUser, deleteUserById };

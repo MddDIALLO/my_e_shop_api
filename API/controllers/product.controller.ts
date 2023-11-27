@@ -76,7 +76,7 @@ const addNewProduct = async (req: Request, res: Response) => {
 
         if(price) {
             if (parseInt(price, 10)) {
-                newProduct.price = parseFloat(price);
+                newProduct.price = Number(parseFloat(price));
             } else {
                 return res.status(400).send({ message: 'Invalid Poduct price' });
             }
@@ -141,7 +141,7 @@ const updateExistingProduct = async (req: Request, res: Response) => {
 
         if(price) {
             if (parseInt(price, 10)) {
-                updatedProduct.price = parseFloat(price);
+                updatedProduct.price = Number(parseFloat(price));
             } else {
                 return res.status(400).send({ message: 'Invalid Poduct price' });
             }

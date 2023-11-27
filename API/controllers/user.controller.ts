@@ -42,8 +42,6 @@ const login = async (req: Request, res: Response) => {
             role_id: existingUser.role_id
         };
 
-        console.log("tokenPayload: ", tokenPayload);
-
         const token = jwt.sign(tokenPayload, 'your_secret_key', { expiresIn: '1h' });
 
         res.status(200).send({

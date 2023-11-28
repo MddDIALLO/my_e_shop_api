@@ -9,6 +9,8 @@ declare global {
             isAuth?: boolean;
             isAuthToManRole?: boolean;
             isAuthToManOrder?: boolean;
+            addOrderAdmin?:boolean;
+            updateOrderAdmin?:boolean;
         }
     }
 }

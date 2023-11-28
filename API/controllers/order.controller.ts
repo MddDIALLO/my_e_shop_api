@@ -92,11 +92,27 @@ const getOrderById = async (req: Request, res: Response) => {
 
 const addNewOrder = async (req: Request, res: Response) => {
     try {
-        const { products } = req.body;
+        const { user_id, products } = req.body;
         let cost: number = 0;
+        let userId : number = 0;
 
-        if(!products) {
-            res.status(400).send({ message: 'You must add products for any order like this { "products": [{product_id, quantity},] } ' });
+
+        
+        if(!req.addOrderAdmin) {
+            if(!products) {
+                return res.status(400).send({ 
+                    message: 'You must add products for any order like this { products: [{product_id, quantity},] } ' });
+            }
+        } else {
+            if(!products || !user_id) {
+                return res.status(400).send({ message: 'You must add products for any order like this { user_id: user_id, products: [{product_id, quantity},] } ' });
+            }
+        }
+
+        if(!req.addOrderAdmin) {
+            userId = req.user?.id;
+        } else {
+            userId = Number(user_id);
         }
 
         for (const item of products) {
@@ -109,12 +125,13 @@ const addNewOrder = async (req: Request, res: Response) => {
 
         const newOrder: Order = {
             id: 0,
-            user_id: 3,
+            user_id: userId,
             status: "pending",
             total_cost: cost,
             created_date: new Date(),
             updated_date: new Date()
         }
+
         let orderID: number = 0;
 
         try {
@@ -122,6 +139,7 @@ const addNewOrder = async (req: Request, res: Response) => {
 
             console.log("Order added successfully", insertedId);
             orderID = insertedId;
+            newOrder.id = insertedId;
         } catch (error) {
             console.error('Error adding Order:', error);
             res.status(500).send({ message: 'Failed to add Order' });
@@ -194,17 +212,33 @@ const updateOrder = async (req: Request, res: Response) => {
             });
         }
 
-        if(!status && !productsToAdd && !productsToRemove) {
-            return res.status(404).send({
-                message: "You must specify update elements like this:",
-                status: "in (created, sent, delivered, canceled)", 
-                productsToAdd: "[{product_id, quantity}]",
-                productsToRemove: "[{product_id}]"
-            });
+        if(req.isAuthToManOrder && req.user.id === 1) {
+            if(!status && !productsToAdd && !productsToRemove) {
+                return res.status(404).send({
+                    message: "You must specify update elements like this:",
+                    status: "in (created, sent, delivered, canceled)", 
+                    productsToAdd: "[{product_id, quantity}]",
+                    productsToRemove: "[{product_id}]"
+                });
+            }
+        } else {
+            if(!status && !productsToAdd && !productsToRemove) {
+                return res.status(404).send({
+                    message: "You must specify update elements like this:",
+                    productsToAdd: "[{product_id, quantity}]",
+                    productsToRemove: "[{product_id}]"
+                });
+            }
         }
 
-        if (status) {
+        if (status && req.isAuthToManOrder) {
             existingOrder.status = status;
+        }
+
+        if(status && !req.isAuthToManOrder) {
+            return res.status(201).send({
+                message: "Permission denied to update Order status"
+            });
         }
 
         if (productsToAdd && productsToAdd.length > 0) {
@@ -289,6 +323,40 @@ const updateOrder = async (req: Request, res: Response) => {
     }
 };
 
+const cancelOrder = async (req: Request, res: Response) => {
+    try {
+        const orderId: number = parseInt(req.params.id);
+        const existingOrder: Order | null = await orderDB.getOrderById(orderId);
+
+        if (!existingOrder) {
+            return res.status(404).send({
+                message: 'Order not found'
+            });
+        }
+
+        existingOrder.status = "canceled";
+
+        const orderUpdatetat: boolean = await orderDB.updateOrder(orderId, existingOrder);
+
+        if(orderUpdatetat) {
+            res.status(200).send({
+                message: 'Order canceled successfully',
+                result: existingOrder
+            });
+        } else {
+            res.status(200).send({
+                message: 'Order cancel failled',
+            });
+        }
+        
+    } catch (err) {
+        res.status(500).send({
+            message: 'DATABASE ERROR',
+            error: err.code
+        });
+    }
+};
+
 const deleteOrderById = async (req: Request, res: Response) => {
     try {
         const orderId: number = Number(req.params.id);
@@ -316,4 +384,4 @@ const deleteOrderById = async (req: Request, res: Response) => {
     }
 };
 
-export default { getAllOrders, getOrderById, addNewOrder, updateOrder, deleteOrderById };
+export default { getAllOrders, getOrderById, addNewOrder, updateOrder, cancelOrder, deleteOrderById };

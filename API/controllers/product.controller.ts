@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import product from '../db/product';
 import { Product } from '../models/product';
+import orderDB from '../db/order';
+import { Order_item } from '../models/order_item';
+import { exit } from 'process';
 
 const getAll = (req: Request, res: Response) => {
     product.selectAll().then(products => {
@@ -199,6 +202,12 @@ const updateExistingProduct = async (req: Request, res: Response) => {
 const deleteProductById = async (req: Request, res: Response) => {
     try {
         const productId = Number(req.params.id);
+        const orderItems: Order_item[] = await orderDB.getOrderItemsByProduct(productId);
+
+        if(orderItems && orderItems.length > 0) {
+            return res.status(201).send({ message: 'This product belongs to one or many orders: deletion failled' });
+        }
+
         const deleted = await product.deleteProduct(productId);
 
         if (deleted) {

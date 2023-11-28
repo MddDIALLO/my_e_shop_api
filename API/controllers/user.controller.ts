@@ -5,7 +5,6 @@ import user from '../db/user';
 import { User } from '../models/user';
 import orderDB from '../db/order';
 import { Order } from '../models/order';
-import { Order_item } from '../models/order_item';
 
 const login = async (req: Request, res: Response) => {
     try {

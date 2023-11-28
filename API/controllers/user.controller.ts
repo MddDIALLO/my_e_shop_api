@@ -3,6 +3,9 @@ const jwt = require("jsonwebtoken");
 import { Request, Response } from 'express';
 import user from '../db/user';
 import { User } from '../models/user';
+import orderDB from '../db/order';
+import { Order } from '../models/order';
+import { Order_item } from '../models/order_item';
 
 const login = async (req: Request, res: Response) => {
     try {
@@ -169,7 +172,7 @@ const addNewUser = async (req: Request, res: Response) => {
             }
         }
 
-        if(req.user.id) {
+        if(req.user?.id) {
             newUser.created_by = req.user.id;
             newUser.updated_by = req.user.id;
         }
@@ -263,6 +266,15 @@ const updateExistingUser = async (req: Request, res: Response) => {
 const deleteUserById = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.params.id);
+        const userOrders: Order[] = await orderDB.getUserOrders(userId);
+
+        if(userOrders) {
+            for (const item of userOrders) {
+                await orderDB.deleteOrderItems(item.id);
+                await orderDB.deleteOrder(item.id);
+            }
+        }
+
         const deleted = await user.deleteUser(userId);
 
         if (deleted) {

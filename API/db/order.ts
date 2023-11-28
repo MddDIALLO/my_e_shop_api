@@ -63,6 +63,27 @@ const getAllOrderItems = (orderId: number): Promise<Order_item[]> => {
     });
 };
 
+const getUserOrders = (userId: number): Promise<Order[]> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
+            conn.query("SELECT * FROM orders WHERE user_id = ?", [userId], (err, result) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+
+                const userOrders: Order[] = result as Order[];
+                return resolve(userOrders);
+            });
+        });
+    });
+};
+
 const getOrderItem = (orderId: number, productId: number): Promise<Order_item> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
@@ -225,6 +246,7 @@ export default {
                     getOrderById, 
                     getAllOrderItems, 
                     getOrderItem,
+                    getUserOrders,
                     addNewOrder, 
                     addNewOrderItem, 
                     updateOrder, 

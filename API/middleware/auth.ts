@@ -8,6 +8,7 @@ declare global {
             isAdmin?: boolean;
             isAuth?: boolean;
             isAuthToManRole?: boolean;
+            isAuthToManOrder?: boolean;
         }
     }
 }

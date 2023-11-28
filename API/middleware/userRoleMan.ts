@@ -18,7 +18,9 @@ const isAuthToManRole = (req: Request, res: Response, next: NextFunction) => {
         } else if (userRole != 1 && userId === id) {
             req.isAuthToManRole = true;
             next();
-        } 
+        } else {
+            return res.status(401).send({ message: 'Permission denied.' });
+        }
     } else {
         req.isAuthToManRole = false;
         next();

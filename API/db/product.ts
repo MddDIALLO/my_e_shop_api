@@ -2,6 +2,19 @@ import { Product } from '../models/product';
 import { connection } from '../config/db';
 import { QueryError, PoolConnection, OkPacket } from 'mysql2';
 
+function isValidDateString(dateString: string): boolean {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!dateRegex.test(dateString)) {
+        return false;
+    }
+
+    const dateObject = new Date(dateString);
+    const isValidDate = !isNaN(dateObject.getTime());
+
+    return isValidDate;
+}
+
 const selectAll = (): Promise<Product[]> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
@@ -98,4 +111,4 @@ const deleteProduct = (productId: number): Promise<boolean> => {
     });
 };
 
-export default { selectAll, getProductById, addNewProduct, updateProduct, deleteProduct };
+export default { isValidDateString, selectAll, getProductById, addNewProduct, updateProduct, deleteProduct };

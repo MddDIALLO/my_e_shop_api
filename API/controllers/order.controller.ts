@@ -194,56 +194,93 @@ const updateOrder = async (req: Request, res: Response) => {
             });
         }
 
-        // Update the status if provided in the request
-        if (status && !productsToAdd && !productsToRemove) {
-            existingOrder.status = status;
+        if(!status && !productsToAdd && !productsToRemove) {
+            return res.status(404).send({
+                message: "You must specify update elements like this:",
+                status: "in (created, sent, delivered, canceled)", 
+                productsToAdd: "[{product_id, quantity}]",
+                productsToRemove: "[{product_id}]"
+            });
+        }
 
-            try {
-                await orderDB.updateOrder(orderId, existingOrder); // Implement the function to update order status in the DB
-            } catch (error) {
-                console.error('Error updating Order status:', error);
-                return res.status(500).send({
-                    message: 'Failed to update Order status'
-                });
-            }
-        } else if (status) {
+        if (status) {
             existingOrder.status = status;
-
-            try {
-                await orderDB.updateOrder(orderId, existingOrder);
-                console.log("Order status updated.")
-            } catch (error) {
-                console.error('Error updating Order status:', error);
-            }
         }
 
         if (productsToAdd && productsToAdd.length > 0) {
             for (const productData of productsToAdd) {
                 const { product_id, quantity } = productData;
+                let orderItem: Order_item = await orderDB.getOrderItem(orderId, product_id);
 
-                // Add logic to check if the product exists, handle quantity update or add new order item
-                // Update the order's total cost accordingly
+                if(orderItem) {
+                    orderItem.quantity += quantity;
+                    const stat = await orderDB.updateOrderItem(orderId, product_id, orderItem);
+
+                    if(stat) {
+                        console.log("Order Item Quantity updated.");
+                    } else {
+                        console.log("Order Item Quantity updat failed.")
+                    }
+                } else {
+                    const stat = await orderDB.addNewOrderItem({order_id: orderId, product_id, quantity});
+
+                    if(stat) {
+                        console.log("Order Item added.");
+                    } else {
+                        console.log("Order Item add failed.")
+                    }
+                }
             }
         }
 
-        // Handle removal of products from the order
         if (productsToRemove && productsToRemove.length > 0) {
             for (const productData of productsToRemove) {
                 const { product_id } = productData;
 
-                // Add logic to remove the specified product from the order items
-                // Update the order's total cost accordingly
+                let orderItem: Order_item = await orderDB.getOrderItem(orderId, product_id);
+
+                if(orderItem) {
+                    const stat = await orderDB.deleteOrderItem(orderId, product_id);
+
+                    if(stat) {
+                        console.log("Order Item removed.");
+                    } else {
+                        console.log("Order Item remove failed.")
+                    }
+                } else {
+                    console.log("Order Item not found.");
+                }
             }
         }
 
-        // Update the order's total cost if needed
-        // Implement logic to recalculate the total cost based on updated order items
+        const orderItems: Order_item[] = await orderDB.getAllOrderItems(orderId);
+        let cost: number = 0;
 
-        // Finally, send the updated order details in the response
-        res.status(200).send({
-            message: 'Order updated successfully',
-            result: existingOrder // Send the updated order details
-        });
+        if(orderItems) {
+            for (const item of orderItems) {
+                const product: Product | null = await productDB.getProductById(item.product_id);
+                
+                if(product) {
+                    cost += item.quantity * product.price;
+                }
+            }
+        }
+        
+        existingOrder.total_cost = cost;
+
+        const orderUpdatetat: boolean = await orderDB.updateOrder(orderId, existingOrder);
+
+        if(orderUpdatetat) {
+            res.status(200).send({
+                message: 'Order updated successfully',
+                result: existingOrder
+            });
+        } else {
+            res.status(200).send({
+                message: 'Order update failled',
+            });
+        }
+        
     } catch (err) {
         res.status(500).send({
             message: 'DATABASE ERROR',
@@ -255,7 +292,7 @@ const updateOrder = async (req: Request, res: Response) => {
 const deleteOrderById = async (req: Request, res: Response) => {
     try {
         const orderId: number = Number(req.params.id);
-        const itemDeleted: boolean = await orderDB.deleteOrderItem(orderId);
+        const itemDeleted: boolean = await orderDB.deleteOrderItems(orderId);
 
         if (itemDeleted) {
             console.log("Order items deleted.");

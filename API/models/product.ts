@@ -3,8 +3,6 @@ export interface Product {
     name: string;
     description: string;
     price: number;
-    created_by: number;
-    updated_by: number;
-    created_date: Date;
-    updated_date: Date;
+    made_date: Date;
+    expiry_date: Date;
 }

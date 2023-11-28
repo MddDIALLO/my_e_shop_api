@@ -43,15 +43,18 @@ const getProductById = async (req: Request, res: Response) => {
 const addNewProduct = async (req: Request, res: Response) => {
     try {
         const { name, description, price } = req.body;
+
+        const currentDate = new Date();
+        const madeDate = new Date(currentDate.getTime() - (10 * 24 * 60 * 60 * 1000)); // 10 days ago
+        const expiryDate = new Date(currentDate.getTime() + (90 * 24 * 60 * 60 * 1000)); // 90 days from now
+
         const newProduct: Product = {
             id: 0,
             name: '',
             description: '',
             price: 0.00,
-            created_by: 0,
-            updated_by: 0,
-            created_date: new Date(),
-            updated_date: new Date()
+            made_date: madeDate,
+            expiry_date: expiryDate
         }
 
         if(name) {
@@ -109,10 +112,8 @@ const updateExistingProduct = async (req: Request, res: Response) => {
             name: '',
             description: '',
             price: 0.00,
-            created_by: 0,
-            updated_by: 0,
-            created_date: new Date(),
-            updated_date: new Date()
+            made_date: new Date(),
+            expiry_date: new Date()
         };
 
         const productResult = await product.getProductById(productId);
@@ -120,7 +121,7 @@ const updateExistingProduct = async (req: Request, res: Response) => {
         if (productResult) {
             updatedProduct = productResult;
         } else {
-            return res.status(404).send({ message: 'User not found' });
+            return res.status(404).send({ message: 'Product not found' });
         }
 
         if(name) {

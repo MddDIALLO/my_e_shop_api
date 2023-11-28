@@ -63,6 +63,28 @@ const getAllOrderItems = (orderId: number): Promise<Order_item[]> => {
     });
 };
 
+const getOrderItem = (orderId: number, productId: number): Promise<Order_item> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
+            conn.query("SELECT * FROM order_items WHERE order_id = ? AND product_id = ?", [orderId, productId], (err, result) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+
+                const orderItems: Order_item[] = result as Order_item[];
+                const orderItem: Order_item = orderItems[0];
+                return resolve(orderItem);
+            });
+        });
+    });
+};
+
 const addNewOrder = (newOrder: Order): Promise<number> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
@@ -122,7 +144,7 @@ const updateOrder = (orderId: number, updatedOrder: Order): Promise<boolean> => 
     });
 };
 
-const updateOrderItem = (OrderItemId: number, updatedOrderItem: Order_item): Promise<boolean> => {
+const updateOrderItem = (orderId: number, productId: number, updatedOrderItem: Order_item): Promise<boolean> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
             if (err) {
@@ -130,7 +152,7 @@ const updateOrderItem = (OrderItemId: number, updatedOrderItem: Order_item): Pro
                 return reject(err);
             }
 
-            conn.query("UPDATE order_items SET ? WHERE id = ?", [updatedOrderItem, OrderItemId], (err, result: OkPacket) => {
+            conn.query("UPDATE order_items SET ? WHERE order_id = ? AND product_id = ?", [updatedOrderItem, orderId, productId], (err, result: OkPacket) => {
                 conn.release();
                 if (err) {
                     return reject(err);
@@ -160,7 +182,7 @@ const deleteOrder = (orderId: number): Promise<boolean> => {
     });
 };
 
-const deleteOrderItem = (orderId: number): Promise<boolean> => {
+const deleteOrderItems = (orderId: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {
         connection.getConnection((err: QueryError, conn: PoolConnection) => {
             if (err) {
@@ -179,14 +201,35 @@ const deleteOrderItem = (orderId: number): Promise<boolean> => {
     });
 };
 
+const deleteOrderItem = (orderId: number, productId: number): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+        connection.getConnection((err: QueryError, conn: PoolConnection) => {
+            if (err) {
+                conn.release();
+                return reject(err);
+            }
+
+            conn.query("DELETE FROM order_items WHERE order_id = ? AND product_id = ?", [orderId, productId], (err, result: OkPacket) => {
+                conn.release();
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(result.affectedRows > 0);
+            });
+        });
+    });
+};
+
 export default { 
                     getAllOrders, 
                     getOrderById, 
                     getAllOrderItems, 
+                    getOrderItem,
                     addNewOrder, 
                     addNewOrderItem, 
                     updateOrder, 
                     updateOrderItem, 
                     deleteOrder, 
+                    deleteOrderItems,
                     deleteOrderItem 
                 };

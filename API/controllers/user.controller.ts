@@ -37,6 +37,8 @@ const login = async (req: Request, res: Response) => {
             return res.status(401).send({ message: 'Invalid credentials' });
         }
 
+        const secretKey = process.env.JWT_SECRET || 'default_secret_key';
+
         const tokenPayload = {
             id: existingUser.id,
             username: existingUser.username,
@@ -44,7 +46,7 @@ const login = async (req: Request, res: Response) => {
             role_id: existingUser.role_id
         };
 
-        const token = jwt.sign(tokenPayload, 'your_secret_key', { expiresIn: '1h' });
+        const token = jwt.sign(tokenPayload, secretKey, { expiresIn: '1h' });
 
         res.status(200).send({
             message: 'Login successful',

@@ -23,7 +23,9 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
         return res.status(401).send({ message: 'Access token not found' });
     }
 
-    jwt.verify(token, 'your_secret_key', (err, decoded: any) => {
+    const secretKey = process.env.JWT_SECRET || 'default_secret_key';
+
+    jwt.verify(token, secretKey, (err, decoded: any) => {
         if (err) {
             return res.status(403).send({ message: 'Invalid token' });
         }

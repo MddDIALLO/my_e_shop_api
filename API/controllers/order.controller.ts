@@ -183,10 +183,9 @@ const addNewOrder = async (req: Request, res: Response) => {
 
 const updateOrder = async (req: Request, res: Response) => {
     try {
-        const orderId: number = parseInt(req.params.id); // Assuming the order ID is passed in the request parameters
-        const { status, productsToAdd, productsToRemove } = req.body; // Assuming the request body contains necessary fields for update
+        const orderId: number = parseInt(req.params.id);
+        const { status, productsToAdd, productsToRemove } = req.body;
 
-        // Fetch the existing order by ID
         const existingOrder: Order | null = await orderDB.getOrderById(orderId);
 
         if (!existingOrder) {
@@ -196,20 +195,28 @@ const updateOrder = async (req: Request, res: Response) => {
         }
 
         // Update the status if provided in the request
-        if (status) {
+        if (status && !productsToAdd && !productsToRemove) {
             existingOrder.status = status;
 
             try {
-                await orderDB.updateOrderStatus(orderId, status); // Implement the function to update order status in the DB
+                await orderDB.updateOrder(orderId, existingOrder); // Implement the function to update order status in the DB
             } catch (error) {
                 console.error('Error updating Order status:', error);
                 return res.status(500).send({
                     message: 'Failed to update Order status'
                 });
             }
+        } else if (status) {
+            existingOrder.status = status;
+
+            try {
+                await orderDB.updateOrder(orderId, existingOrder);
+                console.log("Order status updated.")
+            } catch (error) {
+                console.error('Error updating Order status:', error);
+            }
         }
 
-        // Handle addition of new products to the order
         if (productsToAdd && productsToAdd.length > 0) {
             for (const productData of productsToAdd) {
                 const { product_id, quantity } = productData;
@@ -245,8 +252,6 @@ const updateOrder = async (req: Request, res: Response) => {
     }
 };
 
-export { updateOrder };
-
 const deleteOrderById = async (req: Request, res: Response) => {
     try {
         const orderId: number = Number(req.params.id);
@@ -274,4 +279,4 @@ const deleteOrderById = async (req: Request, res: Response) => {
     }
 };
 
-export default { getAllOrders, getOrderById, addNewOrder, deleteOrderById };
+export default { getAllOrders, getOrderById, addNewOrder, updateOrder, deleteOrderById };

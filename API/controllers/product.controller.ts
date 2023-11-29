@@ -3,7 +3,6 @@ import product from '../db/product';
 import { Product } from '../models/product';
 import orderDB from '../db/order';
 import { Order_item } from '../models/order_item';
-import { exit } from 'process';
 
 const getAll = (req: Request, res: Response) => {
     product.selectAll().then(products => {
@@ -48,8 +47,8 @@ const addNewProduct = async (req: Request, res: Response) => {
         const { name, description, price, made_date, expiry_date } = req.body;
 
         const currentDate = new Date();
-        const madeDate = new Date(currentDate.getTime() - (10 * 24 * 60 * 60 * 1000)); // 10 days ago
-        const expiryDate = new Date(currentDate.getTime() + (90 * 24 * 60 * 60 * 1000)); // 90 days from now
+        const madeDate = new Date(currentDate.getTime() - (10 * 24 * 60 * 60 * 1000));
+        const expiryDate = new Date(currentDate.getTime() + (90 * 24 * 60 * 60 * 1000));
 
         const newProduct: Product = {
             id: 0,

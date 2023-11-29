@@ -46,10 +46,10 @@ const getUserById = (userId: number): Promise<User | null> => {
                 }
 
                 if (Array.isArray(result) && result.length === 0) {
-                    return resolve(null); // User not found
+                    return resolve(null);
                 }
 
-                const user: User = result[0] as User; // Assuming result[0] is of type User
+                const user: User = result[0] as User;
                 return resolve(user);
             });
         });
@@ -74,10 +74,10 @@ const getUserByUsernameOrEmail = (identifier: string): Promise<User | null> => {
                     }
 
                     if (Array.isArray(result) && result.length === 0) {
-                        return resolve(null); // User not found
+                        return resolve(null);
                     }
 
-                    const user: User = result[0] as User; // Assuming result[0] is of type User
+                    const user: User = result[0] as User;
                     return resolve(user);
                 }
             );

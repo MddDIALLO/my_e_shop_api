@@ -95,8 +95,6 @@ const addNewOrder = async (req: Request, res: Response) => {
         const { user_id, products } = req.body;
         let cost: number = 0;
         let userId : number = 0;
-
-
         
         if(!req.addOrderAdmin) {
             if(!products) {

@@ -334,6 +334,18 @@ const cancelOrder = async (req: Request, res: Response) => {
             });
         }
 
+        if(existingOrder && existingOrder.status === "sent") {
+            return res.status(201).send({
+                message: 'Order already sent it is impossible to cancel'
+            });
+        }
+
+        if(existingOrder && existingOrder.status === "delivered") {
+            return res.status(201).send({
+                message: 'Order already delivered it is impossible to cancel'
+            });
+        }
+
         existingOrder.status = "canceled";
 
         const orderUpdatetat: boolean = await orderDB.updateOrder(orderId, existingOrder);

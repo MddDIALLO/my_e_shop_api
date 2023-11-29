@@ -212,6 +212,18 @@ const updateOrder = async (req: Request, res: Response) => {
             });
         }
 
+        if(existingOrder && existingOrder.status === "sent") {
+            return res.status(201).send({
+                message: 'Order already sent it is impossible to update'
+            });
+        }
+
+        if(existingOrder && existingOrder.status === "delivered") {
+            return res.status(201).send({
+                message: 'Order already delivered it is impossible to update'
+            });
+        }
+
         if(req.isAuthToManOrder && req.user.id === 1) {
             if(!status && !productsToAdd && !productsToRemove) {
                 return res.status(404).send({

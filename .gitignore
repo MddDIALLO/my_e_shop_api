@@ -1,4 +1,5 @@
 /API/node_modules
+/API/.dockerignore
 .env
 *#
 *~

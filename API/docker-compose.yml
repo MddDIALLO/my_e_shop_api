@@ -13,7 +13,7 @@ services:
       - '${DATABASE_PORT}:${DATABASE_PORT}'
     volumes:
       - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - mysql_data:/var/lib/mysql   # Volume for MySQL data persistence
+      - mysql_data:/var/lib/mysql
     env_file:
       - .env
 

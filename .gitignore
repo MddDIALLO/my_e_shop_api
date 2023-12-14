@@ -1,5 +1,11 @@
 /API/node_modules
 /API/.dockerignore
+.terraform/
 .env
 *#
 *~
+*.tfvars
+*.tfstate
+*.backup
+*.hcl
+tf_vm_plan

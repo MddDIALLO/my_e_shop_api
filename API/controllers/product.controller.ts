@@ -56,7 +56,8 @@ const addNewProduct = async (req: Request, res: Response) => {
             description: '',
             price: 0.00,
             made_date: madeDate,
-            expiry_date: expiryDate
+            expiry_date: expiryDate,
+            image_url: ''
         }
 
         if(name) {
@@ -124,14 +125,15 @@ const addNewProduct = async (req: Request, res: Response) => {
 const updateExistingProduct = async (req: Request, res: Response) => {
     try {
         const productId = Number(req.params.id);
-        const { name, description, price, made_date, expiry_date } = req.body;
+        const { name, description, price, made_date, expiry_date, image_url } = req.body;
         let updatedProduct: Product = {
             id: 0,
             name: '',
             description: '',
             price: 0.00,
             made_date: new Date(),
-            expiry_date: new Date()
+            expiry_date: new Date(),
+            image_url: ''
         };
 
         const productResult = await product.getProductById(productId);
@@ -180,6 +182,10 @@ const updateExistingProduct = async (req: Request, res: Response) => {
             } else {
                 return res.status(400).send({ message: 'Invalid Poduct expiry_date' }); 
             }
+        }
+
+        if(image_url) {
+            updatedProduct.image_url = image_url;
         }
 
         const updated = await product.updateProduct(productId, updatedProduct);

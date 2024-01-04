@@ -5,4 +5,5 @@ export interface Product {
     price: number;
     made_date: Date;
     expiry_date: Date;
+    image_url: string;
 }

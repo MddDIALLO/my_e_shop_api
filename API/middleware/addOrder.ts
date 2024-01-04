@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 
 const addOrderAdmin = (req: Request, res: Response, next: NextFunction) => {
-    const userRole: number = req.user?.role_id;
+    const userRole: string = req.user?.role;
 
-    if (userRole && userRole === 1) {
+    if (userRole && userRole === 'ADMIN') {
         req.addOrderAdmin = true;
         next();
-    } else if(userRole && userRole != 1) {
+    } else if(userRole && userRole != 'ADMIN') {
         req.addOrderAdmin = false;
         next();
     } else {

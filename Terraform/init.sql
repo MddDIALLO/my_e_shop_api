@@ -2,22 +2,18 @@ DROP DATABASE IF EXISTS C2WK_BACK_END_DB;
 CREATE DATABASE C2WK_BACK_END_DB;
 USE C2WK_BACK_END_DB;
 
-CREATE TABLE IF NOT EXISTS roles (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(10) NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role_id INT NOT NULL,
+    role VARCHAR(10) NOT NULL DEFAULT 'USER',
     created_by INT DEFAULT NULL,
     updated_by INT DEFAULT NULL,
     created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+    image_url VARCHAR(255) NULL,
+    isActive BOOL DEFAULT true
 );
 
 CREATE TABLE IF NOT EXISTS products (
@@ -29,6 +25,7 @@ CREATE TABLE IF NOT EXISTS products (
     updated_by INT NULL,
     created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    image_url VARCHAR(255) NULL,
     FOREIGN KEY (created_by) REFERENCES users(id),
     FOREIGN KEY (updated_by) REFERENCES users(id)
 );
@@ -51,10 +48,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
-INSERT INTO roles (name) VALUES ('ADMIN'), ('USER');
-
-INSERT INTO users (username, email, password, role_id) VALUES ('mdian', 'mdian@diari.com', 'Mdian123$', 1), 
-                                                               ('diallo', 'diallo@diari.com', 'Diallo123$', 2);
+INSERT INTO users (username, email, password, role) VALUES ('mdian', 'mdian@diari.com', 'Mdian123$', 'ADMIN'), 
+                                                               ('diallo', 'diallo@diari.com', 'Diallo123$', 'USER');
 
 INSERT INTO products (name, description, created_by, updated_by) VALUES ('Milk', 'fresh Milk', 1, 1),
                                                                        ('Fanta', 'fresh FANTA', 1, 1),

@@ -3,9 +3,11 @@ export interface User {
     username: string;
     email: string;
     password: string;
-    role_id: number;
+    role: string;
     created_by: number;
     updated_by: number;
     created_date: Date;
     updated_date: Date;
+    image_url: string;
+    isActive: boolean;
 }

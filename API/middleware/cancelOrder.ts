@@ -3,7 +3,7 @@ import orderDB from '../db/order';
 import { Order } from '../models/order';
 
 const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
-    const userRole: number = req.user?.role_id;
+    const userRole: string = req.user?.role;
     const userId: number = req.user?.id;
     const orderId: number = Number(req.params?.id);
     const order: Order| null = await orderDB.getOrderById(orderId);
@@ -15,11 +15,11 @@ const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
         return res.status(404).send({ message: 'Order not found.' });
     }
 
-    if (userRole === 1) {
+    if (userRole === 'ADMIN') {
         next();
-    } else if(userRole != 1 && userId === user_id) {
+    } else if(userRole != 'ADMIN' && userId === user_id) {
         next();
-    } else if (userRole != 1 && userId != user_id) {
+    } else if (userRole != 'ADMIN' && userId != user_id) {
         return res.status(401).send({ message: 'You are not allowed to cancel this order.' });
     } else {
         return res.status(401).send({ message: 'Permission denied.' });

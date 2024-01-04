@@ -1,0 +1,43 @@
+<main class="main">
+  <div class="content">
+    <h2>Profile</h2>
+    <div>
+      <div class="preview-image">
+        <ng-container *ngIf="connectedUser.image_url.length > 0; else initials">
+          <img [src]="imageUrlWithTimestamp || staticUrl + 'images/users/' + connectedUser.image_url" alt="User Avatar">
+        </ng-container>
+        <ng-template #initials>
+          <span>{{ connectedUser.username | uppercase | slice: 0:2 }}</span>
+        </ng-template>
+      </div>
+
+      <p>Username: {{ connectedUser.username }}</p>
+      <p>Email: {{ connectedUser.email }}</p>
+    </div>
+
+    <h3>Update Password and Image</h3>
+    <form (ngSubmit)="updateProfile()">
+      <div class="form-group">
+        <label for="password">New Password</label>
+        <input type="password" id="password" [(ngModel)]="user.password" name="password" required
+               (input)="checkPasswordStrength()">
+        <p class="error-message" *ngIf="user.password && !passwordValid">Password is not strong enough.</p>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" [(ngModel)]="confirmPassword" name="confirmPassword" required
+               (input)="checkPasswordMatch()">
+        <p class="error-message" *ngIf="confirmPassword && !passwordMatch">Passwords do not match.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="imageUrl">New Image</label>
+        <input type="file" id="image" name="image" (change)="onImageChange($event)" accept="image/*">
+      </div>
+
+      <div *ngIf="reqIssue" class="error-message">{{ reqIssueMessage }}</div>
+      <div *ngIf="userUpdated" class="req-success-message">{{ updateUserMessage }}</div>
+      <button *ngIf="passwordOk || imageSaved" type="submit">Update Profile</button>
+    </form>
+  </div>
+</main>

@@ -1,0 +1,25 @@
+<header>
+  <div class="logo">
+    <span>MAMADOU DIAN DIALLO</span>
+  </div>
+  <nav>
+    <ul>
+      <li *ngIf="isLogedIn()" class="connected-user">
+        <!-- <ng-container *ngIf="connectedUser.image_url.length > 0; else initials">
+          <img [src]="staticUrl + 'images/users/' + connectedUser.image_url + '?' + getCurrentTime()" alt="User Avatar">
+        </ng-container> -->
+        <ng-container *ngIf="connectedUser.image_url.length > 0; else initials">
+          <img [src]="imageUrlWithTimestamp || staticUrl + 'images/users/' + connectedUser.image_url" alt="User Avatar">
+        </ng-container>
+        <ng-template #initials>
+          <span>{{ connectedUser.username | uppercase | slice: 0:2 }}</span>
+        </ng-template>
+      </li>
+      <li *ngIf="!isHomePage()"><a routerLink="/" routerLinkActive="active">Store</a></li>
+      <li class="login" *ngIf="!isProfilePage() && !isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/profile" routerLinkActive="active">Profile</a></li>
+      <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && !isLogedIn()"><a routerLink="/login" routerLinkActive="active">Login</a></li>
+      <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/logout" routerLinkActive="active">Logout</a></li>
+      <li class="login" *ngIf="isAdmin() && isLogedIn() && !isAdminPage()"><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+    </ul>
+  </nav>
+</header>

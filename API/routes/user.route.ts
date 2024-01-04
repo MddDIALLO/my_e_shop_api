@@ -8,6 +8,7 @@ import isAuthToManRole from '../middleware/userRoleMan';
 const userRouter = Router();
 
 userRouter.post('/login', userController.login);
+userRouter.post('/logout', userController.logout);
 userRouter.get('/', authenticateToken, isAdmin, userController.getAll);
 userRouter.get('/:id', authenticateToken, isAuth, userController.getUserById);
 userRouter.post('/', isAuthToManRole, userController.addNewUser);

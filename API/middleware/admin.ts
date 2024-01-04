@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-    const userRole: number = req.user?.role_id;
+    const userRole: string = req.user?.role;
 
-    if (userRole && userRole === 1) {
+    if (userRole && userRole === 'ADMIN') {
         req.isAdmin = true;
         next();
     } else {

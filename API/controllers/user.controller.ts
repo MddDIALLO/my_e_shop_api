@@ -8,22 +8,22 @@ import { Order } from '../models/order';
 
 const login = async (req: Request, res: Response) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password } = req.body;
         let existingUser: User | null = {
             id: 0,
             username: '',
             email: '',
             password: '',
-            role_id: 2,
+            role: '',
             created_by: 1,
             updated_by: 1,
             created_date: new Date(),
-            updated_date: new Date()
+            updated_date: new Date(),
+            image_url: '',
+            isActive: false
         };
 
-        if(username) {
-            existingUser = await user.getUserByUsernameOrEmail(username);
-        } else if(email){
+        if(email){
             existingUser = await user.getUserByUsernameOrEmail(email);
         }
 
@@ -43,15 +43,50 @@ const login = async (req: Request, res: Response) => {
             id: existingUser.id,
             username: existingUser.username,
             email: existingUser.email,
-            role_id: existingUser.role_id
+            role: existingUser.role
         };
 
         const token = jwt.sign(tokenPayload, secretKey, { expiresIn: '2h' });
+        const connectedUser: any = {
+            id: existingUser.id,
+            username: existingUser.username,
+            email: existingUser.email,
+            role: existingUser.role,
+            image_url: existingUser.image_url
+        }
 
         res.status(200).send({
             message: 'Login successful',
-            token: token
+            token: token,
+            connectedUser: connectedUser
         });
+    } catch (error) {
+        console.error('Error occurred:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+};
+
+const logout = (req: Request, res: Response) => {
+    try {
+        const { token } = req.body;
+        
+        if (!token) {
+            return res.status(401).send({ message: 'Invalid or missing token' });
+        }
+
+        const secretKey = process.env.JWT_SECRET || 'default_secret_key';
+        const decodedToken = jwt.decode(token);
+
+        if (!decodedToken) {
+            return res.status(403).send({ message: 'Invalid token' });
+        }
+
+        const expiredToken = jwt.sign({ 
+            tokenPayload: decodedToken.tokenPayload, 
+            expiresIn: Math.floor(Date.now() / 1000) - 1
+        }, secretKey);
+
+        res.status(200).send({ message: 'Logout successful' });
     } catch (error) {
         console.error('Error occurred:', error);
         res.status(500).send({ message: 'Internal Server Error' });
@@ -60,9 +95,22 @@ const login = async (req: Request, res: Response) => {
 
 const getAll = (req: Request, res: Response) => {
     user.selectAll().then(users => {
+        let returnedUsers: any[] = [];
+        for (const gotUser of users) {
+            returnedUsers.push({
+                    id:gotUser.id, 
+                    username: gotUser.username, 
+                    email: gotUser.email, 
+                    role: gotUser.role,
+                    created_date: gotUser.created_date,
+                    updated_date: gotUser.updated_date, 
+                    image_url: gotUser.image_url, 
+                    isActive: gotUser.isActive
+                });
+        }
         res.status(200).send({
             message: 'Users List',
-            result: users
+            result: returnedUsers
         })
     }).catch(err => {
         res.status(500).send({
@@ -83,9 +131,20 @@ const getUserById = async (req: Request, res: Response) => {
         const userResult = await user.getUserById(userId);
 
         if (userResult) {
+            const returnedUser: any = {
+                id: userResult.id,
+                username: userResult.username,
+                email: userResult.email,
+                role: userResult.role,
+                created_date: userResult.created_date,
+                updated_date: userResult.updated_date, 
+                image_url: userResult.image_url,
+                isActive: userResult.isActive
+            }
+
             res.status(200).send({
                 message: 'User found',
-                user: userResult
+                user: returnedUser
             });
         } else {
             res.status(404).send({ message: 'User not found' });
@@ -98,18 +157,13 @@ const getUserById = async (req: Request, res: Response) => {
 
 const addNewUser = async (req: Request, res: Response) => {
     try {
-        const { username, email, password, role_id } = req.body;
+        const { username, email, password, role } = req.body;
 
-        if(role_id && !req.isAuthToManRole) {
+        if(role && !req.isAuthToManRole) {
             return res.status(403).send({ message: 'Access denied. You are not authorized to manage user role.' });
         }
 
-        const exitingUsername: User | null = await user.getUserByUsernameOrEmail(username);
         const exitingEmail: User | null = await user.getUserByUsernameOrEmail(email);
-
-        if(exitingUsername) {
-            return res.status(400).send({ message: 'Username already used' });
-        }
 
         if(exitingEmail) {
             return res.status(400).send({ message: 'Email already used' });
@@ -120,11 +174,13 @@ const addNewUser = async (req: Request, res: Response) => {
             username: '',
             email: '',
             password: '',
-            role_id: 2,
+            role: 'USER',
             created_by: 1,
             updated_by: 1,
             created_date: new Date(),
-            updated_date: new Date()
+            updated_date: new Date(),
+            image_url: '',
+            isActive: true
         };
 
         if(username) {
@@ -164,9 +220,9 @@ const addNewUser = async (req: Request, res: Response) => {
         }
 
         if(req.isAuthToManRole) {
-            if(role_id) {
-                if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
-                    newUser.role_id = role_id;
+            if(role) {
+                if(role === 'ADMIN' || role === 'USER') {
+                    newUser.role = role;
                 } else {
                     return res.status(400).send({ message: 'Invalid role' });
                 }
@@ -180,9 +236,35 @@ const addNewUser = async (req: Request, res: Response) => {
 
         try {
             const insertedId = await user.addUser(newUser);
+            
+            if (!insertedId) {
+                return res.status(500).send({ message: 'Failed to add user' });
+            }
+    
+            newUser.id = insertedId;
+            
+            const secretKey = process.env.JWT_SECRET || 'default_secret_key';
+    
+            const tokenPayload = {
+                id: insertedId,
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role
+            };
+    
+            const token = jwt.sign(tokenPayload, secretKey, { expiresIn: '2h' });
+            const connectedUser: any = {
+                id: insertedId,
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role,
+                image_url: newUser.image_url
+            }
+
             res.status(200).send({
                 message: 'User added successfully',
-                userId: insertedId
+                token: token,
+                connectedUser: connectedUser
             });
         } catch (error) {
             console.error('Error adding user:', error);
@@ -197,9 +279,9 @@ const addNewUser = async (req: Request, res: Response) => {
 const updateExistingUser = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.params.id);
-        const { password, role_id } = req.body;
+        const { password, role, image_url, isActive } = req.body;
 
-        if(role_id && !req.isAuthToManRole) {
+        if(role && !req.isAuthToManRole) {
             return res.status(403).send({ message: 'Access denied. You are not authorized to manage user role.' });
         }
 
@@ -208,11 +290,13 @@ const updateExistingUser = async (req: Request, res: Response) => {
             username: '',
             email: '',
             password: '',
-            role_id: 0,
+            role: '',
             created_by: 0,
             updated_by: 0,
             created_date: new Date(),
-            updated_date: new Date()
+            updated_date: new Date(),
+            image_url: '',
+            isActive: false
         };
 
         const userResult = await user.getUserById(userId);
@@ -236,13 +320,21 @@ const updateExistingUser = async (req: Request, res: Response) => {
         }
 
         if(req.isAuthToManRole) {
-            if(role_id) {
-                if(parseInt(role_id, 10) === 1 || parseInt(role_id, 10) === 2) {
-                    updatedUser.role_id = parseInt(role_id, 10);
+            if(role) {
+                if(role === 'ADMIN' || role === 'USER') {
+                    updatedUser.role = role;
                 } else {
                     return res.status(400).send({ message: 'Invalid role' });
                 }
             }
+        }
+
+        if(isActive && (isActive === true || isActive === false)) {
+            updatedUser.isActive = isActive;
+        }
+
+        if(image_url && image_url.length > 0) {
+            updatedUser.image_url = image_url;
         }
 
         updatedUser.updated_by = req.user.id;
@@ -292,4 +384,4 @@ const deleteUserById = async (req: Request, res: Response) => {
     }
 };
 
-export default { login, getAll, getUserById, addNewUser, updateExistingUser, deleteUserById };
+export default { login, logout, getAll, getUserById, addNewUser, updateExistingUser, deleteUserById };

@@ -21,13 +21,9 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    created_by INT NULL,
-    updated_by INT NULL,
-    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    image_url VARCHAR(255) NULL,
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
+    made_date DATETIME DEFAULT NULL,
+    expiry_date DATETIME DEFAULT NULL,
+    image_url VARCHAR(255) NULL
 );
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -51,9 +47,9 @@ CREATE TABLE IF NOT EXISTS order_items (
 INSERT INTO users (username, email, password, role) VALUES ('mdian', 'mdian@diari.com', 'Mdian123$', 'ADMIN'), 
                                                                ('diallo', 'diallo@diari.com', 'Diallo123$', 'USER');
 
-INSERT INTO products (name, description, created_by, updated_by) VALUES ('Milk', 'fresh Milk', 1, 1),
-                                                                       ('Fanta', 'fresh FANTA', 1, 1),
-                                                                       ('Rice', 'Long Rice', 1, 1);
+INSERT INTO products (name, description) VALUES ('Milk', 'fresh Milk'),
+                                                                       ('Fanta', 'fresh FANTA'),
+                                                                       ('Rice', 'Long Rice');
 
 INSERT INTO orders (user_id, status, total_cost) VALUES (3, 'pending', '20.99'),
                                                         (5, 'pending', '99.99'),

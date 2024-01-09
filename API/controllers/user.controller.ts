@@ -187,7 +187,7 @@ const addNewUser = async (req: Request, res: Response) => {
             if(username.length >= 3) {
                 newUser.username = username;
             } else {
-                return res.status(400).send({ message: 'Invalid username: it must contain at lest three characters' });
+                return res.status(400).send({ message: 'Invalid username: it must contain at least 3 characters' });
             }
         } else {
             return res.status(400).send({ message: 'Username is required' });
@@ -279,7 +279,7 @@ const addNewUser = async (req: Request, res: Response) => {
 const updateExistingUser = async (req: Request, res: Response) => {
     try {
         const userId = Number(req.params.id);
-        const { password, role, image_url, isActive } = req.body;
+        const { username, email, password, role, image_url, isActive } = req.body;
 
         if(role && !req.isAuthToManRole) {
             return res.status(403).send({ message: 'Access denied. You are not authorized to manage user role.' });
@@ -307,6 +307,24 @@ const updateExistingUser = async (req: Request, res: Response) => {
             return res.status(404).send({ message: 'User not found' });
         }
 
+        if(username) {
+            if(username.length >= 3) {
+                updatedUser.username = username;
+            } else {
+                return res.status(400).send({ message: 'Invalid username: it must contain at least 3 characters' });
+            }
+        }
+
+        if(email) {
+            const isValidEmail = user.validateEmail(email);
+
+            if (isValidEmail) {
+                updatedUser.email = email;
+            } else {
+                return res.status(400).send({ message: 'Invalid Email Adress: It must be like "example@example.com"' });
+            }
+        }
+
         if (password) {
             const isValidPassword = user.validatePassword(password);
 
@@ -319,18 +337,15 @@ const updateExistingUser = async (req: Request, res: Response) => {
             }
         }
 
-        if(req.isAuthToManRole) {
-            if(role) {
-                if(role === 'ADMIN' || role === 'USER') {
-                    updatedUser.role = role;
-                } else {
-                    return res.status(400).send({ message: 'Invalid role' });
-                }
-            }
+        if(role) {
+            updatedUser.role = role;
         }
 
-        if(isActive && (isActive === true || isActive === false)) {
-            updatedUser.isActive = isActive;
+        if(isActive && isActive === 1) {
+            updatedUser.isActive = true;
+        }
+        if(!isActive && isActive === 0) {
+            updatedUser.isActive = false;
         }
 
         if(image_url && image_url.length > 0) {
@@ -341,7 +356,7 @@ const updateExistingUser = async (req: Request, res: Response) => {
         updatedUser.updated_date = new Date();
 
         const updated = await user.updateUser(userId, updatedUser);
-
+        
         if (updated) {
             res.status(200).send({
                 message: 'User updated successfully',

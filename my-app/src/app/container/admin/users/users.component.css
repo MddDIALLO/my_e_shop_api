@@ -1,57 +1,10 @@
-/* body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-.main {
-  margin-top: 1%;
-  width: 97%;
-  margin-left: 1%;
-  margin-right: 1%;
-  padding-left: 1%;
-  padding-right: 1%;
-}
-
-.content {
-  max-width: 100%;
-  margin: 0 auto;
-  background-color: #f5f5f5;
-  padding: 20px;
-  border-radius: 5px;
-}
-
-h2 {
-  font-size: 24px;
-  margin-bottom: 15px;
-}
-
-.admin-links ul {
-  list-style: none;
-  padding: 0;
-}
-
-.admin-links li {
-  margin-bottom: 10px;
-}
-
-.admin-links a {
-  text-decoration: none;
-  color: #007bff;
-  transition: color 0.3s ease;
-}
-
-.admin-links a:hover {
-  color: #0056b3;
-} */
-
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
   color: #566787;
   background: #f5f5f5;
-  font-size: 13px;
+  font-size: 20px;
 }
 .table-responsive {
   margin: 30px 0;
@@ -60,7 +13,7 @@ body {
   min-width: 1000px;
   background: #fff;
   padding: 20px 25px;
-border-radius: 3px;
+  border-radius: 3px;
   box-shadow: 0 1px 1px rgba(0,0,0,.05);
 }
 .table-title {
@@ -78,7 +31,7 @@ font-size: 24px;
 .table-title .btn {
 color: #566787;
 float: right;
-font-size: 13px;
+font-size: 15px;
 background: #fff;
 border: none;
 min-width: 50px;
@@ -89,7 +42,7 @@ margin-left: 10px;
 }
 .table-title .btn:hover, .table-title .btn:focus {
   color: #566787;
-background: #f2f2f2;
+  background: #f2f2f2;
 }
 .table-title .btn i {
 float: left;
@@ -118,7 +71,7 @@ table.table-striped.table-hover tbody tr:hover {
 background: #f5f5f5;
 }
 table.table th i {
-  font-size: 13px;
+  font-size: 15px;
   margin: 0 5px;
   cursor: pointer;
 }
@@ -127,23 +80,38 @@ opacity: 0.9;
 font-size: 22px;
   margin: 0 5px;
 }
-table.table td a {
+.button-group {
+  display: flex;
+  flex-direction: row;
+}
+table.table td button {
 font-weight: bold;
 color: #566787;
 display: inline-block;
 text-decoration: none;
+background-color: transparent;
 }
-table.table td a:hover {
+table.table td button:hover {
 color: #2196F3;
 }
-table.table td a.settings {
+table.table td button.settings {
   color: #2196F3;
+  border: none;
 }
-table.table td a.delete {
+table.table td button.block {
+  color: #FFC107;
+  border: none;
+}
+table.table td button.unblock {
+  color: #10c469;
+  border: none;
+}
+table.table td button.delete {
   color: #F44336;
+  border: none;
 }
 table.table td i {
-  font-size: 19px;
+  font-size: 15px;
 }
 table.table .avatar {
 border-radius: 50%;
@@ -175,7 +143,7 @@ line-height: 10px;
 }
 .pagination li a {
   border: none;
-  font-size: 13px;
+  font-size: 15px;
   min-width: 30px;
   min-height: 30px;
   color: #999;
@@ -198,11 +166,85 @@ line-height: 10px;
   color: #ccc;
 }
 .pagination li i {
-  font-size: 16px;
+  font-size: 15px;
   padding-top: 6px
 }
 .hint-text {
   float: left;
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 15px;
+}
+
+table.table img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 8px;
+  text-align: center;
+  line-height: 40px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+table.table .img {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+  color: #fff;
+  text-align: center;
+  line-height: 40px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.edit-user-form {
+  margin-top: 30px;
+  background: #fff;
+  padding: 20px 25px;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+.edit-user-form h2 {
+  margin: 0 0 15px;
+  font-size: 24px;
+}
+
+.edit-user-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.edit-user-form input[type="password"],
+.edit-user-form select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 15px;
+}
+
+.edit-user-form button {
+  padding: 8px 15px;
+  margin-top: 10px;
+  margin-right: 4px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #299be4;
+}
+
+.edit-user-form button[type="submit"] {
+  background-color: #299be4;
+}
+
+.edit-user-form button[type="button"] {
+  background-color: #f44336;
 }

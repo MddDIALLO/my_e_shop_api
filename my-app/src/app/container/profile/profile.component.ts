@@ -141,7 +141,6 @@ export class ProfileComponent {
               this.imageSaved = false;
               this.passwordOk = false;
               this.refreshService.triggerRefresh();
-              // this.router.navigate(['/profile']);
             }
           },
           (error) => {

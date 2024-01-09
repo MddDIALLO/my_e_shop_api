@@ -39,9 +39,15 @@ export class UserService {
     return this.http.get(`${this.API_URL}/api/users/${id}`, this.options);
   }
 
-  updateUser(id: number, options: { password?: string, role?: string, image_url?: string, isActive?: boolean }): Observable<any> {
+  updateUser(id: number, options: { username?: string, email?: string, password?: string, role?: string, image_url?: string, isActive?: number }): Observable<any> {
     const updatedUser: any = {};
 
+    if (options.username !== undefined && options.username !== null) {
+      updatedUser.username = options.username;
+    }
+    if (options.email !== undefined && options.email !== null) {
+      updatedUser.email = options.email;
+    }
     if (options.password !== undefined && options.password !== null) {
       updatedUser.password = options.password;
     }

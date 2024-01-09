@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import product from '../db/product';
 import { Product } from '../models/product';
 import orderDB from '../db/order';
@@ -44,7 +44,7 @@ const getProductById = async (req: Request, res: Response) => {
 
 const addNewProduct = async (req: Request, res: Response) => {
     try {
-        const { name, description, price, made_date, expiry_date } = req.body;
+        const { name, description, price, made_date, expiry_date, image_url } = req.body;
 
         const currentDate = new Date();
         const madeDate = new Date(currentDate.getTime() - (10 * 24 * 60 * 60 * 1000));
@@ -91,20 +91,16 @@ const addNewProduct = async (req: Request, res: Response) => {
         }
 
         if(made_date) {
-            if(product.isValidDateString(made_date)) {
-                newProduct.made_date = new Date(made_date);
-            } else {
-                return res.status(400).send({ message: 'Invalid Poduct made_date' }); 
-            }
+            newProduct.made_date = made_date;
         }
 
         if(expiry_date) {
-            if(product.isValidDateString(expiry_date)) {
-                newProduct.expiry_date = new Date(expiry_date);
-            } else {
-                return res.status(400).send({ message: 'Invalid Poduct expiry_date' }); 
-            }
+            newProduct.expiry_date = expiry_date;
         }
+
+        if(image_url && image_url.length >= 5) {
+            newProduct.image_url = image_url;
+        } 
 
         try {
             const insertedId = await product.addNewProduct(newProduct);
@@ -169,22 +165,14 @@ const updateExistingProduct = async (req: Request, res: Response) => {
         }
 
         if(made_date) {
-            if(product.isValidDateString(made_date)) {
-                updatedProduct.made_date = new Date(made_date);
-            } else {
-                return res.status(400).send({ message: 'Invalid Poduct made_date' }); 
-            }
+            updatedProduct.made_date = made_date;
         }
 
         if(expiry_date) {
-            if(product.isValidDateString(expiry_date)) {
-                updatedProduct.expiry_date = new Date(expiry_date);
-            } else {
-                return res.status(400).send({ message: 'Invalid Poduct expiry_date' }); 
-            }
+            updatedProduct.expiry_date = expiry_date;
         }
 
-        if(image_url) {
+        if(image_url && image_url.length >= 5) {
             updatedProduct.image_url = image_url;
         }
 

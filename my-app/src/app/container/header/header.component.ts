@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { ValidateTokenService } from '../../service/user/validate-token.service';
 import { RefreshService } from '../../service/refresh.service';
 import { Rep } from '../../models/response.interface';
+import { Cart } from '../../models/product.interface';
+import { CartService } from '../../service/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -20,12 +22,20 @@ export class HeaderComponent {
     role: '',
     image_url: ''
   }
+  cart: Cart = {
+    items : []
+  };
+  cartQuantity: number = 0;
 
   constructor(
     private validateToken: ValidateTokenService,
     private router: Router,
+    private cartService: CartService,
     private refreshService: RefreshService
-  ) {}
+  ) {
+    this.updateCart();
+    this.updateCartQuantity();
+  }
 
   ngOnInit(): void {
     this.checkTokenValidity();
@@ -36,9 +46,21 @@ export class HeaderComponent {
     });
   }
 
-  // getCurrentTime(): number {
-  //   return Date.now();
-  // }
+  updateCart() {
+    this.cart = this.cartService.getCart();
+  }
+
+  updateCartQuantity() {
+    this.cartQuantity = 0;
+
+    this.cart.items.forEach((cartItem) => {
+      this.cartQuantity += cartItem.quantity;
+    });
+  }
+
+  getCurrentTime(): number {
+    return Date.now();
+  }
 
   imageUrlWithTimestamp: string | null = null;
 

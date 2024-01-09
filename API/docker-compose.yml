@@ -34,6 +34,9 @@ services:
       - db
     env_file:
       - .env
+    volumes:
+      - app_data:/app/static
 
 volumes:
   mysql_data:
+  app_data:

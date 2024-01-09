@@ -11,6 +11,7 @@ import { ProfileComponent } from './container/profile/profile.component';
 import { UsersComponent } from './container/admin/users/users.component';
 import { ProductsComponent } from './container/admin/products/products.component';
 import { OrdersComponent } from './container/admin/orders/orders.component';
+import { CartComponent } from './container/cart/cart.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -18,6 +19,7 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
   { path: 'logout', component: LogoutComponent },
+  { path: 'cart', component: CartComponent },
   {
     path: 'admin',
     component: AdminComponent,

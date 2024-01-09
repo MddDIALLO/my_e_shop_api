@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ValidateTokenService } from '../../service/user/validate-token.service';
 import { RefreshService } from '../../service/refresh.service';
+import { Product, productsData, Cart, Item } from '../../models/product.interface';
+import { ProductService } from '../../service/product/product.service';
+import { CartService } from '../../service/cart.service';
 
 @Component({
   selector: 'app-home',
@@ -9,54 +13,30 @@ import { RefreshService } from '../../service/refresh.service';
 })
 export class HomeComponent {
   tokenStatus: string = '';
-  products = [
-    {
-      id: 1,
-      name: 'Product 1',
-      price: '$19.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 2,
-      name: 'Product 2',
-      price: '$24.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 3,
-      name: 'Product 3',
-      price: '$29.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 4,
-      name: 'Product 4',
-      price: '$24.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 5,
-      name: 'Product 5',
-      price: '$29.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 6,
-      name: 'Product 6',
-      price: '$24.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 7,
-      name: 'Product 7',
-      price: '$29.99',
-      imageUrl: 'https://via.placeholder.com/150'
-    }
-  ];
+  products: Product[] = [];
+  quantityOptions: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  selectedQuantity: number = 1;
+  product: Product = {
+    id: 0,
+    name: '',
+    description: '',
+    price: 0,
+    made_date: new Date,
+    expiry_date: new Date,
+    image_url: ''
+  };
+  staticUrl: string = 'http://localhost:3000/static/';
+  reqIssue = false;
+  reqIssueMessage = '';
+  reqSuccess = false;
+  reqSuccessMessage = '';
 
   constructor(
     private validateToken: ValidateTokenService,
-    private refreshService: RefreshService
+    private refreshService: RefreshService,
+    private _productService: ProductService,
+    private _cartService: CartService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -65,6 +45,14 @@ export class HomeComponent {
     this.refreshService.refresh.subscribe(() => {
       this.checkTokenValidity();
     });
+    this.fetchProducts();
+
+    // if(localStorage.getItem('token')) {
+    //   localStorage.removeItem('token');
+    // }
+    // if(localStorage.getItem('cart')) {
+    //   localStorage.removeItem('cart');
+    // }
   }
 
   checkTokenValidity() {
@@ -75,7 +63,82 @@ export class HomeComponent {
     }
   }
 
+  getCurrentTime(): number {
+    return Date.now();
+  }
+
+  fetchProducts() {
+    this._productService.getProducts().subscribe(data => {
+      let usersData: any = data;
+      const responseData: productsData = JSON.parse(usersData);
+      const results: Product[] = responseData.result;
+
+      if(results) {
+        this.products = results;
+      }
+    });
+  }
+
   isLogedIn(): boolean {
     return this.tokenStatus === 'Valid token';
+  }
+
+  addToCart(product: Product) {
+    const newCartItem = {
+      product: product,
+      quantity: Number(this.selectedQuantity)
+    };
+
+    console.log(newCartItem);
+
+    this._cartService.addToCart(newCartItem);
+    this.reqSuccess = true;
+    this.reqSuccessMessage = 'Added to cart';
+
+    setTimeout(() => {
+      this.reqSuccess = false;
+    }, 2000);
+  }
+
+  removeFromCart(product: Product) {
+
+  }
+
+  updateCartItemQuanty(product: Product, newQuantity: number) {
+
+  }
+
+  // Pagination logic
+  currentPage: number = 1;
+  productsPerPage: number = 25;
+
+  getProductsForCurrentPage(): Product[] {
+    const startIndex = (this.currentPage - 1) * this.productsPerPage;
+    const endIndex = startIndex + this.productsPerPage;
+    return this.products.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.products.length / this.productsPerPage);
+  }
+
+  getPageNumbers(): number[] {
+    return new Array(this.getTotalPages()).fill(0).map((x, i) => i + 1);
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.getTotalPages()) {
+      this.currentPage++;
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
   }
 }

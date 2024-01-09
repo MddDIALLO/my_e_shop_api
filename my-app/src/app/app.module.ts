@@ -16,6 +16,7 @@ import { ProfileComponent } from './container/profile/profile.component';
 import { UsersComponent } from './container/admin/users/users.component';
 import { ProductsComponent } from './container/admin/products/products.component';
 import { OrdersComponent } from './container/admin/orders/orders.component';
+import { CartComponent } from './container/cart/cart.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { OrdersComponent } from './container/admin/orders/orders.component';
     ProfileComponent,
     UsersComponent,
     ProductsComponent,
-    OrdersComponent
+    CartComponent,
+    OrdersComponent,
   ],
   imports: [
     BrowserModule,

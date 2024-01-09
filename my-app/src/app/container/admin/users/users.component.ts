@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { User, UserTable, UsersData } from '../../../models/user.interface';
+import { UserTable, UsersData } from '../../../models/user.interface';
 import { UserService } from '../../../service/user/user.service';
-import { UpdateDelRes } from '../../../models/response.interface';
+import { Message, UpdateDelRes } from '../../../models/response.interface';
+import { HttpClient, HttpResponse  } from '@angular/common/http';
 
 @Component({
   selector: 'app-users',
@@ -11,9 +12,14 @@ import { UpdateDelRes } from '../../../models/response.interface';
 export class UsersComponent {
   users: UserTable[] = [];
   isEditingUser: boolean = false;
+  isConfirming: boolean = false;
   newPassword = '';
+  passwordValid = false;
+  strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   reqIssue = false;
   reqIssueMessage = '';
+  reqSuccess = false;
+  reqSuccessMessage = '';
   selectedUser: UserTable = {
     id: 0,
     username: '',
@@ -24,9 +30,40 @@ export class UsersComponent {
     image_url: '',
     isActive: false
   };
+  userToDelete: UserTable = {
+    id: 0,
+    username: '',
+    email: '',
+    role: '',
+    created_date: null,
+    updated_date: null,
+    image_url: '',
+    isActive: false
+  };
+  staticUrl: string = 'http://localhost:3000/static/';
+  imageUrl: string | undefined;
 
-  constructor(private _userService: UserService) {
+  constructor(
+    private _userService: UserService,
+    private http: HttpClient
+  ) {
     this.fetchUsers();
+  }
+
+  async imageUrlExists(imageUrl: string): Promise<boolean> {
+    try {
+      const response = await this.http.head(imageUrl).toPromise();
+      if (response instanceof HttpResponse) {
+        return response.status === 200;
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  getCurrentTime(): number {
+    return Date.now();
   }
 
   fetchUsers() {
@@ -39,6 +76,18 @@ export class UsersComponent {
         this.users = results;
       }
     });
+  }
+
+  exportToExcel() {
+
+  }
+
+  exportPageToExcel() {
+
+  }
+
+  checkPasswordStrength() {
+    this.passwordValid = this.strongPasswordRegex.test(this.newPassword);
   }
 
   showEditUserForm(userId: number) {
@@ -55,22 +104,68 @@ export class UsersComponent {
     this.isEditingUser = true;
   }
 
+  cancelEditUser() {
+    this.isEditingUser = false;
+  }
+
   editUser() {
     if(this.selectedUser.id > 0) {
       this._userService.updateUser(
         this.selectedUser.id,
         {
           password: this.newPassword,
-          role: this.selectedUser.image_url,
-          isActive: this.selectedUser.isActive
+          role: this.selectedUser.role
         }
         ).subscribe(
           (response) => {
             const responseData: any = response;
             const data: UpdateDelRes = JSON.parse(responseData);
             if(data.message === 'User updated successfully') {
-              this.isEditingUser = false;
               this.fetchUsers();
+              this.reqSuccess = true;
+              this.reqSuccessMessage = data.message;
+
+              setTimeout(() => {
+                this.reqIssue = false;
+                this.isEditingUser = false;
+              }, 3000);
+            }
+          },
+          (error) => {
+            const errorData: any = error;
+            const message: Message = JSON.parse(errorData);
+            this.reqIssue = true;
+            this.reqIssueMessage = message.message;
+
+            setTimeout(() => {
+              this.reqIssue = false;
+              this.isEditingUser = false;
+            }, 3000);
+          }
+        )
+    }
+  }
+
+  blockUser(userId: number, option: string) {
+    if(userId > 0 && option) {
+      this._userService.updateUser(
+        userId,
+        {
+          isActive: parseInt(option, 10)
+        }
+        ).subscribe(
+          (response) => {
+            const responseData: any = response;
+            const data: UpdateDelRes = JSON.parse(responseData);
+            if(data.message === 'User updated successfully') {
+              this.fetchUsers();
+              this.reqSuccess = true;
+              this.reqSuccessMessage = data.message;
+
+              setTimeout(() => {
+                this.reqSuccess = false;
+                this.isEditingUser = false;
+              }, 3000);
             }
           },
           (error) => {
@@ -82,21 +177,85 @@ export class UsersComponent {
     }
   }
 
-  exportToExcel() {
-
+  showConfirming(userId: number) {
+    this.userToDelete = this.users.find(user => user.id === userId) || {
+      id: 0,
+      username: '',
+      email: '',
+      role: '',
+      created_date: null,
+      updated_date: null,
+      image_url: '',
+      isActive: false
+    };
+    this.isConfirming = true;
   }
 
-  addNewUser() {
-
+  hideConfirming() {
+    this.isConfirming = false;
   }
 
   deleteUser(userId: number) {
-    this._userService.deleteUser(userId).subscribe(() => {
-      this.fetchUsers();
-    });
+    this._userService.deleteUser(userId).subscribe(
+      (response) => {
+        const responseData: any = response;
+        const data: UpdateDelRes = JSON.parse(responseData);
+        if(data.message === 'User deleted successfully') {
+          this.fetchUsers();
+          this.reqSuccess = true;
+          this.reqSuccessMessage = data.message;
+
+          setTimeout(() => {
+            this.reqSuccess = false;
+            this.isConfirming = false;
+          }, 3000);
+        }
+      },
+      (error) => {
+        const errorData: any = error;
+        const message: Message = JSON.parse(errorData);
+        this.reqIssue = true;
+        this.reqIssueMessage = message.message;
+
+        setTimeout(() => {
+          this.reqIssue = false;
+          this.isConfirming = false;
+        }, 3000);
+      }
+    );
   }
 
-  cancelEditUser() {
-    this.isEditingUser = false;
+  // Pagination logic
+  currentPage: number = 1;
+  usersPerPage: number = 4;
+
+  getUsersForCurrentPage(): UserTable[] {
+    const startIndex = (this.currentPage - 1) * this.usersPerPage;
+    const endIndex = startIndex + this.usersPerPage;
+    return this.users.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.users.length / this.usersPerPage);
+  }
+
+  getPageNumbers(): number[] {
+    return new Array(this.getTotalPages()).fill(0).map((x, i) => i + 1);
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.getTotalPages()) {
+      this.currentPage++;
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
   }
 }

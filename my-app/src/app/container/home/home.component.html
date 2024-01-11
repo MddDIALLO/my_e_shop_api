@@ -11,14 +11,15 @@
         </div>
         <div class="product-price">${{ product.price }}</div>
         <div class="product-quantity-container">
-          <select id="quantity-{{ product.id }}" name="quantity" [(ngModel)]="selectedQuantity">
+          <select id="quantity-{{ product.id }}" name="quantity-{{ product.id }}" [(ngModel)]="selectedQuantities[product.id]">
             <option *ngFor="let quantityOption of quantityOptions" [value]="quantityOption">{{ quantityOption }}</option>
           </select>
         </div>
 
         <div class="product-spacer"></div>
 
-        <p *ngIf="reqSuccess" class="added-to-cart">{{ reqSuccessMessage }}</p>
+        <p *ngIf="reqSuccess[product.id]" class="added-to-cart">{{ reqSuccessMessage[product.id] }}</p>
+        <p *ngIf="reqIssue[product.id]" class="not-added-to-cart">{{ reqIssueMessage[product.id] }}</p>
         <button class="add-to-cart-button" (click)="addToCart(product)">Add to Cart</button>
       </div>
     </div>

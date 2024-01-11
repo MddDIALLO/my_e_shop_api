@@ -16,6 +16,11 @@ export class HomeComponent {
   products: Product[] = [];
   quantityOptions: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   selectedQuantity: number = 1;
+  selectedQuantities: { [id: number]: number } = {};
+  reqIssue: { [id: number]: boolean } = {};
+  reqIssueMessage: { [id: number]: string } = {};
+  reqSuccess: { [id: number]: boolean } = {};
+  reqSuccessMessage: { [id: number]: string } = {};
   product: Product = {
     id: 0,
     name: '',
@@ -26,10 +31,6 @@ export class HomeComponent {
     image_url: ''
   };
   staticUrl: string = 'http://localhost:3000/static/';
-  reqIssue = false;
-  reqIssueMessage = '';
-  reqSuccess = false;
-  reqSuccessMessage = '';
 
   constructor(
     private validateToken: ValidateTokenService,
@@ -86,17 +87,33 @@ export class HomeComponent {
   addToCart(product: Product) {
     const newCartItem = {
       product: product,
-      quantity: Number(this.selectedQuantity)
+      quantity: Number(this.selectedQuantities[product.id])
     };
 
-    console.log(newCartItem);
+    if(newCartItem.quantity > 0) {
+      this.reqSuccess[product.id] = true;
+      this.reqIssue[product.id] = false;
+      this.reqSuccessMessage[product.id] = 'Added to cart';
+    } else {
+      this.reqSuccess[product.id] = false;
+      this.reqIssue[product.id] = true;
+      this.reqIssueMessage[product.id] = 'Select product quantity';
+
+      return;
+    }
 
     this._cartService.addToCart(newCartItem);
-    this.reqSuccess = true;
-    this.reqSuccessMessage = 'Added to cart';
+    // this.reqSuccess = true;
+    // this.reqSuccessMessage = 'Added to cart';
 
     setTimeout(() => {
-      this.reqSuccess = false;
+      if(this.reqSuccess[product.id]) {
+        this.reqSuccess[product.id] = false;
+      }
+      if(this.reqIssue[product.id]) {
+        this.reqIssue[product.id] = false;
+      }
+      // this.reqSuccess = false;
     }, 2000);
   }
 

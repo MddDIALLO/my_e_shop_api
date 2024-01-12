@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   order_id INT,
   product_id INT,
   quantity INT DEFAULT 1,
+  delivery_date VARCHAR(255) DEFAULT '0000-00-00',
+  shiping decimal(10,2) NOT NULL DEFAULT '0.00',
   FOREIGN KEY (order_id) REFERENCES orders(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
 );

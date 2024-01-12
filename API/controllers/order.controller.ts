@@ -1,7 +1,7 @@
 
 import { Router, Request, Response } from 'express';
 import productDB from '../db/product';
-import { Product } from '../models/product';
+import { Product, Item } from '../models/product';
 import orderDB from '../db/order';
 import { Order } from '../models/order';
 import { Order_item } from '../models/order_item';
@@ -9,17 +9,42 @@ import { Order_item } from '../models/order_item';
 const getAllOrders = async (req: Request, res: Response) => {
     try {
         const ordersList: Order[] = await orderDB.getAllOrders();
+
+        if(!ordersList || ordersList.length === 0) {
+            return res.status(404).send({
+                message: 'No Order not found'
+            });
+        }
+
         const ordersReturnedList: any[] = [];
 
         for (const orderItem of ordersList) {
             const orderItems: Order_item[] = await orderDB.getAllOrderItems(orderItem.id);
-            const products: Product[] = [];
+            const items: Item[] = [];
+            const fetchedItem: Item = {
+                product: {
+                    id: 0,
+                    name: '',
+                    description: '',
+                    price: 0.00,
+                    made_date: new Date(),
+                    expiry_date: new Date(),
+                    image_url: ''
+                },
+                quantity: 0,
+                deliveryDate: '',
+                shipping: 0
+            }
 
             for (const orderItemDetail of orderItems) {
                 const fetchedProduct: Product | null = await productDB.getProductById(orderItemDetail.product_id);
 
                 if (fetchedProduct) {
-                    products.push(fetchedProduct);
+                    fetchedItem.product = fetchedProduct;
+                    fetchedItem.quantity = orderItemDetail.quantity;
+                    fetchedItem.deliveryDate = orderItemDetail.deliveryDate;
+                    fetchedItem.shipping = orderItemDetail.shipping;
+                    items.push(fetchedItem);
                 }
             }
 
@@ -30,7 +55,7 @@ const getAllOrders = async (req: Request, res: Response) => {
                 "created_date": orderItem.created_date,
                 "updated_date": orderItem.updated_date,
                 "total_cost": orderItem.total_cost,
-                "products": products
+                "items": items
             });
         }
 
@@ -58,13 +83,31 @@ const getOrderById = async (req: Request, res: Response) => {
         }
 
         const orderItems: Order_item[] = await orderDB.getAllOrderItems(order.id);
-        const products: Product[] = [];
+        const items: Item[] = [];
+            const fetchedItem: Item = {
+                product: {
+                    id: 0,
+                    name: '',
+                    description: '',
+                    price: 0.00,
+                    made_date: new Date(),
+                    expiry_date: new Date(),
+                    image_url: ''
+                },
+                quantity: 0,
+                deliveryDate: '',
+                shipping: 0
+            }
 
         for (const orderItem of orderItems) {
             const fetchedProduct: Product | null = await productDB.getProductById(orderItem.product_id);
 
             if (fetchedProduct) {
-                products.push(fetchedProduct);
+                fetchedItem.product = fetchedProduct;
+                fetchedItem.quantity = orderItem.quantity;
+                fetchedItem.deliveryDate = orderItem.deliveryDate;
+                fetchedItem.shipping = orderItem.shipping;
+                items.push(fetchedItem);
             }
         }
 
@@ -75,7 +118,7 @@ const getOrderById = async (req: Request, res: Response) => {
             "created_date": order.created_date,
             "updated_date": order.updated_date,
             "total_cost": order.total_cost,
-            "products": products
+            "products": items
         };
 
         res.status(200).send({
@@ -92,14 +135,14 @@ const getOrderById = async (req: Request, res: Response) => {
 
 const addNewOrder = async (req: Request, res: Response) => {
     try {
-        const { user_id, products } = req.body;
+        const { user_id, products, deliveryDate, shipping } = req.body;
         let cost: number = 0;
         let userId : number = 0;
         
         if(!req.addOrderAdmin) {
             if(!products) {
                 return res.status(400).send({ 
-                    message: 'You must add products for any order like this { products: [{product_id, quantity},] } ' });
+                    message: 'You must add products for any order like this { products: [{product_id, quantity, deliveryDate, shipping},] } ' });
             }
         } else {
             if(!products || !user_id) {
@@ -143,14 +186,14 @@ const addNewOrder = async (req: Request, res: Response) => {
             res.status(500).send({ message: 'Failed to add Order' });
         }
 
-        const newOrderItems: Order_item[] = [];
-
         for (const productData of products) {
             const { product_id, quantity } = productData;
             const newOrderItem: Order_item = {
                 order_id: orderID,
                 product_id,
-                quantity
+                quantity,
+                deliveryDate,
+                shipping
             }
 
             try {
@@ -159,34 +202,11 @@ const addNewOrder = async (req: Request, res: Response) => {
             } catch (error) {
                 console.error('Error adding Order_item:', error);
             }
-
-            newOrderItems.push(newOrderItem);
         }
-
-        const productsForOrder: Product[] = [];
-        for (const orderItem of newOrderItems) {
-            const fetchedProduct: Product | null = await productDB.getProductById(orderItem.product_id);
-
-            if (fetchedProduct) {
-                productsForOrder.push(fetchedProduct);
-            }
-        }
-
-        const orderDetails: Order = {
-            id: newOrder.id,
-            user_id: newOrder.user_id,
-            status: newOrder.status,
-            created_date: newOrder.created_date,
-            updated_date: newOrder.updated_date,
-            total_cost: newOrder.total_cost
-        };
 
         res.status(201).send({
             message: 'New order created',
-            result: {
-                order: orderDetails,
-                products: productsForOrder
-            }
+            orderId: orderID
         });
     } catch (err) {
         res.status(500).send({
@@ -200,7 +220,7 @@ const addNewOrder = async (req: Request, res: Response) => {
 const updateOrder = async (req: Request, res: Response) => {
     try {
         const orderId: number = parseInt(req.params.id);
-        const { status, productsToAdd, productsToRemove } = req.body;
+        const { status } = req.body;
 
         const existingOrder: Order | null = await orderDB.getOrderById(orderId);
 
@@ -210,35 +230,20 @@ const updateOrder = async (req: Request, res: Response) => {
             });
         }
 
+        if (status && (status ==='prepared' || status ==='sent' || status === 'delivered' || status ==='canceled')) {
+            existingOrder.status = status;
+        }
+
         if(existingOrder && existingOrder.status === "sent") {
-            return res.status(201).send({
+            return res.status(403).send({
                 message: 'Order already sent it is impossible to update'
             });
         }
 
         if(existingOrder && existingOrder.status === "delivered") {
-            return res.status(201).send({
+            return res.status(403).send({
                 message: 'Order already delivered it is impossible to update'
             });
-        }
-
-        if(req.isAuthToManOrder && req.user.id === 1) {
-            if(!status && !productsToAdd && !productsToRemove) {
-                return res.status(404).send({
-                    message: "You must specify update elements like this:",
-                    status: "in (created, sent, delivered, canceled)", 
-                    productsToAdd: "[{product_id, quantity}]",
-                    productsToRemove: "[{product_id}]"
-                });
-            }
-        } else {
-            if(!status && !productsToAdd && !productsToRemove) {
-                return res.status(404).send({
-                    message: "You must specify update elements like this:",
-                    productsToAdd: "[{product_id, quantity}]",
-                    productsToRemove: "[{product_id}]"
-                });
-            }
         }
 
         if (status && req.isAuthToManOrder) {
@@ -246,81 +251,20 @@ const updateOrder = async (req: Request, res: Response) => {
         }
 
         if(status && !req.isAuthToManOrder) {
-            return res.status(201).send({
+            return res.status(403).send({
                 message: "Permission denied to update Order status"
             });
         }
-
-        if (productsToAdd && productsToAdd.length > 0) {
-            for (const productData of productsToAdd) {
-                const { product_id, quantity } = productData;
-                let orderItem: Order_item = await orderDB.getOrderItem(orderId, product_id);
-
-                if(orderItem) {
-                    orderItem.quantity += quantity;
-                    const stat = await orderDB.updateOrderItem(orderId, product_id, orderItem);
-
-                    if(stat) {
-                        console.log("Order Item Quantity updated.");
-                    } else {
-                        console.log("Order Item Quantity updat failed.")
-                    }
-                } else {
-                    const stat = await orderDB.addNewOrderItem({order_id: orderId, product_id, quantity});
-
-                    if(stat) {
-                        console.log("Order Item added.");
-                    } else {
-                        console.log("Order Item add failed.")
-                    }
-                }
-            }
-        }
-
-        if (productsToRemove && productsToRemove.length > 0) {
-            for (const productData of productsToRemove) {
-                const { product_id } = productData;
-
-                let orderItem: Order_item = await orderDB.getOrderItem(orderId, product_id);
-
-                if(orderItem) {
-                    const stat = await orderDB.deleteOrderItem(orderId, product_id);
-
-                    if(stat) {
-                        console.log("Order Item removed.");
-                    } else {
-                        console.log("Order Item remove failed.")
-                    }
-                } else {
-                    console.log("Order Item not found.");
-                }
-            }
-        }
-
-        const orderItems: Order_item[] = await orderDB.getAllOrderItems(orderId);
-        let cost: number = 0;
-
-        if(orderItems) {
-            for (const item of orderItems) {
-                const product: Product | null = await productDB.getProductById(item.product_id);
-                
-                if(product) {
-                    cost += item.quantity * product.price;
-                }
-            }
-        }
-        
-        existingOrder.total_cost = cost;
 
         const orderUpdatetat: boolean = await orderDB.updateOrder(orderId, existingOrder);
 
         if(orderUpdatetat) {
             res.status(200).send({
                 message: 'Order updated successfully',
-                result: existingOrder
+                orderId: existingOrder.id
             });
         } else {
-            res.status(200).send({
+            res.status(403).send({
                 message: 'Order update failled',
             });
         }
@@ -345,13 +289,13 @@ const cancelOrder = async (req: Request, res: Response) => {
         }
 
         if(existingOrder && existingOrder.status === "sent") {
-            return res.status(201).send({
+            return res.status(403).send({
                 message: 'Order already sent it is impossible to cancel'
             });
         }
 
         if(existingOrder && existingOrder.status === "delivered") {
-            return res.status(201).send({
+            return res.status(403).send({
                 message: 'Order already delivered it is impossible to cancel'
             });
         }
@@ -363,10 +307,10 @@ const cancelOrder = async (req: Request, res: Response) => {
         if(orderUpdatetat) {
             res.status(200).send({
                 message: 'Order canceled successfully',
-                result: existingOrder
+                orderId: existingOrder.id
             });
         } else {
-            res.status(200).send({
+            res.status(403).send({
                 message: 'Order cancel failled',
             });
         }
@@ -382,6 +326,26 @@ const cancelOrder = async (req: Request, res: Response) => {
 const deleteOrderById = async (req: Request, res: Response) => {
     try {
         const orderId: number = Number(req.params.id);
+        const existingOrder: Order | null = await orderDB.getOrderById(orderId);
+
+        if (!existingOrder) {
+            return res.status(404).send({
+                message: 'Order not found'
+            });
+        }
+
+        if(existingOrder && existingOrder.status === "sent") {
+            return res.status(403).send({
+                message: 'Order already sent it is impossible to delete'
+            });
+        }
+
+        if(existingOrder && existingOrder.status === "delivered") {
+            return res.status(403).send({
+                message: 'Order already delivered it is impossible to delete'
+            });
+        }
+
         const itemDeleted: boolean = await orderDB.deleteOrderItems(orderId);
 
         if (itemDeleted) {

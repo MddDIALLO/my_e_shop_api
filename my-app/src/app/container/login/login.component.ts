@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { UserService } from '../../service/user/user.service';
 import { Router } from '@angular/router';
 import { RefreshService } from '../../service/refresh.service';
-import { Rep } from '../../models/response.interface';
+import { Message, Rep } from '../../models/response.interface';
 
 @Component({
   selector: 'app-login',
@@ -58,9 +58,14 @@ export class LoginComponent {
         }
       },
       error => {
+        const errorData: any = error;
+        const message: Message = JSON.parse(errorData);
         this.reqIssue = true;
-        this.reqIssueMessage = error.error.message;
-        console.error('Login failed:', error);
+        this.reqIssueMessage = message.message;
+
+        setTimeout(() => {
+          this.reqIssue = false;
+        }, 3000);
       }
     );
   }

@@ -18,8 +18,8 @@
 
         <div class="product-spacer"></div>
 
-        <p *ngIf="reqSuccess[product.id]" class="added-to-cart">{{ reqSuccessMessage[product.id] }}</p>
-        <p *ngIf="reqIssue[product.id]" class="not-added-to-cart">{{ reqIssueMessage[product.id] }}</p>
+        <p *ngIf="reqSuccess[product.id] === true" class="added-to-cart">{{ reqSuccessMessage[product.id] }}</p>
+        <p *ngIf="reqIssue[product.id] === true" class="not-added-to-cart">{{ reqIssueMessage[product.id] }}</p>
         <button class="add-to-cart-button" (click)="addToCart(product)">Add to Cart</button>
       </div>
     </div>

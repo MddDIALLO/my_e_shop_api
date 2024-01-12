@@ -42,8 +42,15 @@ export class CartService {
 
   removeFromCart(product: Product): string {
     this.cart.items = this.cart.items.filter(cartItem => cartItem.product.id !== product.id);
-    this.saveToStorage();
 
+    if(this.cart.items.length > 0) {
+      this.saveToStorage();
+    } else {
+      if(localStorage.getItem('cart')) {
+        localStorage.removeItem('cart');
+      }
+    }
+    
     return 'Removed';
   }
 

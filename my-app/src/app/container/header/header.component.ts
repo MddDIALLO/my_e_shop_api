@@ -22,20 +22,17 @@ export class HeaderComponent {
     role: '',
     image_url: ''
   }
-  cart: Cart = {
-    items : []
-  };
-  cartQuantity: number = 0;
+  // cart: Cart = {
+  //   items : []
+  // };
+  // cartQuantity: number = 0;
 
   constructor(
     private validateToken: ValidateTokenService,
     private router: Router,
     private cartService: CartService,
     private refreshService: RefreshService
-  ) {
-    this.updateCart();
-    this.updateCartQuantity();
-  }
+  ) {}
 
   ngOnInit(): void {
     this.checkTokenValidity();
@@ -46,16 +43,26 @@ export class HeaderComponent {
     });
   }
 
-  updateCart() {
-    this.cart = this.cartService.getCart();
+  getCart(): Cart | null {
+    const cart = this.cartService.getCart();
+    if(cart) {
+      return cart;
+    }
+
+    return null;
   }
 
-  updateCartQuantity() {
-    this.cartQuantity = 0;
+  getCartQuantity(): number {
+    let cartQuantity: number = 0;
+    const cart = this.getCart();
 
-    this.cart.items.forEach((cartItem) => {
-      this.cartQuantity += cartItem.quantity;
-    });
+    if(cart) {
+      cart.items.forEach((cartItem) => {
+        cartQuantity += cartItem.quantity;
+      });
+    }
+
+    return cartQuantity;
   }
 
   getCurrentTime(): number {

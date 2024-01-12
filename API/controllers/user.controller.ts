@@ -31,6 +31,10 @@ const login = async (req: Request, res: Response) => {
             return res.status(404).send({ message: 'User not found' });
         }
 
+        if (existingUser && !existingUser.isActive) {
+            return res.status(404).send({ message: 'Account blocked!' });
+        }
+
         const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
         if (!isPasswordValid) {

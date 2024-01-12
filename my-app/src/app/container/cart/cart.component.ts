@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { Cart, Item, Product } from '../../models/product.interface';
 import { CartService } from '../../service/cart.service';
+import { RefreshService } from '../../service/refresh.service';
+import { ValidateTokenService } from '../../service/user/validate-token.service';
 
 @Component({
   selector: 'app-cart',
@@ -25,12 +28,19 @@ export class CartComponent {
   selectedItem: { [id: number]: Item } = {};
 
   constructor(
-    private _cartService: CartService
+    private _cartService: CartService,
+    private router: Router,
+    private _refreshService: RefreshService
   ) {
     this.getCart();
+    this._refreshService.triggerRefresh();
     // this.setDefaultIsEdit();
-    this.setDeliveryDates();
+    // this.setDeliveryDates();
     this.setDefaultValues();
+
+    // if(localStorage.getItem('cart')) {
+    //   localStorage.removeItem('cart');
+    // }
   }
 
   getCart() {
@@ -45,7 +55,14 @@ export class CartComponent {
 
   removeFromCart(product: Product) {
     this.cart.items = this.cart.items.filter(cartItem => cartItem.product.id !== product.id);
-    this.saveToStorage();
+
+    if(this.cart.items.length > 0) {
+      this.saveToStorage();
+    } else {
+      if(localStorage.getItem('cart')) {
+        localStorage.removeItem('cart');
+      }
+    }
   }
 
   showEditItemQuantityForm(productId: number) {
@@ -60,7 +77,9 @@ export class CartComponent {
         expiry_date: new Date,
         image_url: ''
       },
-      quantity: 0
+      quantity: 0,
+      deliveryDate: '',
+      shipping: 0
     };
     this.isEditingQuantity[productId] = true;
   }
@@ -83,10 +102,27 @@ export class CartComponent {
     this.hideEditItemQuantity(productId);
   }
 
+  updateCartItem(cartItem: Item) {
+    let itemToUpdate = this.cart.items.find(item => item.product.id === cartItem.product.id);
+
+    if (itemToUpdate) {
+      itemToUpdate = cartItem;
+      this.saveToStorage();
+
+      console.log('Updated');
+    } else {
+      console.log('Product not found in the cart.');
+    }
+
+    if(this.isEditingQuantity[cartItem.product.id] === true) {
+      this.hideEditItemQuantity(cartItem.product.id);
+    }
+  }
+
   private saveToStorage() {
     localStorage.setItem('cart', JSON.stringify(this.cart));
-    this.getTotalCartItemsAndCosts();
     this.getTotalCartShiping();
+    this.getTotalCartItemsAndCosts();
   }
 
 
@@ -102,24 +138,44 @@ export class CartComponent {
   }
 
   setDeliveryDate(id: number, days: number, cost: number) {
-    this.deliveryDate[Number(id)] = this.addDays(Number(days)).toDateString();
-    this.shipping[Number(id)] = Number(cost);
-    this.getTotalCartShiping();
-  }
+    this.selectedItem[id] = this.cart.items.find(item => item.product.id === id) || {
+      product: {
+        id: 0,
+        name: '',
+        description: '',
+        price: 0,
+        made_date: new Date,
+        expiry_date: new Date,
+        image_url: ''
+      },
+      quantity: 0,
+      deliveryDate: '',
+      shipping: 0
+    };
 
-  setDeliveryDates() {
-    this.deliveryDate1 = this.addDays(1).toDateString();
-    this.deliveryDate2 = this.addDays(3).toDateString();
-    this.deliveryDate3 = this.addDays(7).toDateString();
+    if(this.selectedItem[id].product.id > 0) {
+      this.selectedItem[id].deliveryDate = this.addDays(Number(days)).toDateString();
+      this.selectedItem[id].shipping = Number(cost);
+      this.updateCartItem(this.selectedItem[id]);
+      this.getTotalCartShiping();
+    }
+    // this.deliveryDate[Number(id)] = this.addDays(Number(days)).toDateString();
+    // this.shipping[Number(id)] = Number(cost);
   }
 
   setDefaultValues() {
     if(this.cart.items.length > 0) {
       this.cart.items.forEach((cartItem) => {
-        this.deliveryDate[cartItem.product.id] = this.deliveryDate3;
-        this.selectedItem[cartItem.product.id] = cartItem
+        if(cartItem.deliveryDate.length === 0) {
+          cartItem.deliveryDate = this.deliveryDate3;
+        }
+        // this.selectedItem[cartItem.product.id] = cartItem
       });
     }
+
+    this.deliveryDate1 = this.addDays(1).toDateString();
+    this.deliveryDate2 = this.addDays(3).toDateString();
+    this.deliveryDate3 = this.addDays(7).toDateString();
   }
 
   // setDefaultIsEdit() {
@@ -139,18 +195,15 @@ export class CartComponent {
       this.cart.items.forEach((cartItem) => {
         this.totalCartCost += cartItem.quantity * cartItem.product.price;
       });
-      this.totalCartCostTx = this.totalCartCost * 1.1;
+      this.totalCartCostTx = (this.totalCartCost + this.totalShiping) * 1.1;
     }
   }
 
   getTotalCartShiping() {
     if(this.cart.items.length > 0) {
       this.totalShiping = 0;
-      Object.keys(this.shipping).forEach((key: string) => {
-        const id = parseInt(key, 10);
-        const value = this.shipping[id];
-
-        this.totalShiping += value;
+      this.cart.items.forEach((item) => {
+        this.totalShiping += item.shipping;
       })
     }
   }

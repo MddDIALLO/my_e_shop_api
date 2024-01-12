@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { ValidateTokenService } from '../../service/user/validate-token.service';
 import { RefreshService } from '../../service/refresh.service';
 import { Product, productsData, Cart, Item } from '../../models/product.interface';
@@ -31,13 +30,13 @@ export class HomeComponent {
     image_url: ''
   };
   staticUrl: string = 'http://localhost:3000/static/';
+  deliveryDate: string = '';
 
   constructor(
     private validateToken: ValidateTokenService,
     private refreshService: RefreshService,
     private _productService: ProductService,
-    private _cartService: CartService,
-    private http: HttpClient
+    private _cartService: CartService
   ) {}
 
   ngOnInit(): void {
@@ -47,12 +46,10 @@ export class HomeComponent {
       this.checkTokenValidity();
     });
     this.fetchProducts();
+    this.setDeliveryDates();
 
     // if(localStorage.getItem('token')) {
     //   localStorage.removeItem('token');
-    // }
-    // if(localStorage.getItem('cart')) {
-    //   localStorage.removeItem('cart');
     // }
   }
 
@@ -85,12 +82,15 @@ export class HomeComponent {
   }
 
   addToCart(product: Product) {
-    const newCartItem = {
+    const newCartItem: Item = {
       product: product,
-      quantity: Number(this.selectedQuantities[product.id])
+      quantity: Number(this.selectedQuantities[product.id]),
+      deliveryDate: this.deliveryDate,
+      shipping: 0
     };
 
     if(newCartItem.quantity > 0) {
+      this._cartService.addToCart(newCartItem);
       this.reqSuccess[product.id] = true;
       this.reqIssue[product.id] = false;
       this.reqSuccessMessage[product.id] = 'Added to cart';
@@ -98,13 +98,7 @@ export class HomeComponent {
       this.reqSuccess[product.id] = false;
       this.reqIssue[product.id] = true;
       this.reqIssueMessage[product.id] = 'Select product quantity';
-
-      return;
     }
-
-    this._cartService.addToCart(newCartItem);
-    // this.reqSuccess = true;
-    // this.reqSuccessMessage = 'Added to cart';
 
     setTimeout(() => {
       if(this.reqSuccess[product.id]) {
@@ -113,16 +107,18 @@ export class HomeComponent {
       if(this.reqIssue[product.id]) {
         this.reqIssue[product.id] = false;
       }
-      // this.reqSuccess = false;
     }, 2000);
   }
 
-  removeFromCart(product: Product) {
-
+  addDays(days: number) {
+    const date: Date = new Date();
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
-  updateCartItemQuanty(product: Product, newQuantity: number) {
-
+  setDeliveryDates() {
+    this.deliveryDate = this.addDays(7).toDateString();
   }
 
   // Pagination logic

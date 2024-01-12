@@ -16,6 +16,8 @@ export interface productsData {
 export interface Item {
   product: Product;
   quantity: number;
+  deliveryDate: string;
+  shipping: number;
 }
 
 export interface Cart {

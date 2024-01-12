@@ -26,7 +26,8 @@
         <p class="error-message" *ngIf="confirmPassword && !passwordMatch">Passwords do not match.</p>
       </div>
 
-      <button *ngIf="passwordValid && passwordMatch" type="submit">Register</button>
+      <button *ngIf="passwordValid && passwordMatch" type="submit" class="active-tegister">Register</button>
+      <button *ngIf="!(passwordValid && passwordMatch)" type="submit" class="deactivated-tegister" disabled>Register</button>
     </form>
     <div *ngIf="reqIssue" class="error-message">{{ reqIssueMessage }}</div>
     <p>Already have an account? <a href="/login">Login</a></p>

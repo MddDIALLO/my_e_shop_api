@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { User } from '../../models/user.interface';
 import { UserService } from '../../service/user/user.service';
 import { RefreshService } from '../../service/refresh.service';
-import { Rep } from '../../models/response.interface';
+import { Message, Rep } from '../../models/response.interface';
 
 @Component({
   selector: 'app-register',
@@ -73,8 +73,14 @@ export class RegisterComponent {
           }
         },
         error => {
+          const errorData: any = error;
+          const message: Message = JSON.parse(errorData);
           this.reqIssue = true;
-          this.reqIssueMessage = error.error.message;
+          this.reqIssueMessage = message.message;
+
+          setTimeout(() => {
+            this.reqIssue = false;
+          }, 3000);
         }
       );
     }

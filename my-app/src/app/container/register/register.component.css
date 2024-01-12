@@ -5,7 +5,7 @@ body {
 }
 
 .main {
-  margin-top: 1%;
+  margin-top: 10%;
   width: 97%;
   margin-left: 1%;
   margin-right: 1%;
@@ -52,14 +52,21 @@ button[type='submit'] {
   padding: 10px;
   font-size: 1rem;
   color: #fff;
-  background-color: #007bff;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-button[type='submit']:hover {
+.active-tegister {
+  background-color: #007bff;
+  cursor: pointer;
+}
+
+.deactivated-tegister {
+  background-color: #b1c5da;
+}
+
+.active-tegister:hover {
   background-color: #0056b3;
 }
 

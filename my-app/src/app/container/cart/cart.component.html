@@ -5,7 +5,7 @@
     <div class="order-summary js-order-summary">
       <div class="cart-item-container" *ngFor="let item of cart.items">
         <div class="delivery-date">
-          {{ deliveryDate[item.product.id] }}
+          {{ item.deliveryDate }}
         </div>
 
         <div class="cart-item-details-grid">
@@ -18,30 +18,6 @@
             <div class="product-price">
               ${{ formatCurrency(item.product.price) }}
             </div>
-
-            <!-- <div class="product-quantity">
-              <ng-container *ngIf="!(isEditingQuantity[item.product.id] === true); else editMode">
-                Quantity: <span class="quantity-label">{{ item.quantity }}</span>
-                <span class="update-quantity-link link-primary" (click)="showEditItemQuantityForm(item.product.id)">
-                  Update
-                </span>
-              </ng-container>
-              <ng-template #editMode>
-                <input
-                  type="number"
-                  min="1"
-                  class="quantity-input"
-                  [(ngModel)]="selectedItem[item.product.id].quantity"
-                >
-                <span class="save-quantity-link link-primary" (click)="updateCartItemQuantity(item.product.id, selectedItem[item.product.id].quantity)">
-                  Save
-                </span>
-              </ng-template>
-              <span *ngIf="isEditingQuantity[item.product.id] === false" class="delete-quantity-link link-primary" (click)="removeFromCart(item.product)">
-                Delete
-              </span>
-            </div> -->
-
             <div class="product-quantity">
               <div *ngIf="!(isEditingQuantity[item.product.id] === true)">
                 <span>
@@ -63,7 +39,7 @@
                 >
                 <span
                   class="save-quantity-link link-primary"
-                  (click)="updateCartItemQuantity(item.product.id, selectedItem[item.product.id].quantity)"
+                  (click)="updateCartItem(selectedItem[item.product.id])"
                   >
                   Save
                 </span>
@@ -76,7 +52,8 @@
               Choose a delivery option:
             </div>
             <div class="delivery-option">
-              <input type="radio" checked
+              <input type="radio"
+                [checked]="item.deliveryDate === deliveryDate3"
                 class="delivery-option-input"
                 name="delivery-option-{{ item.product.id }}"
                 value="date:{{ deliveryDate3 }},cost: 0"
@@ -93,6 +70,7 @@
             </div>
             <div class="delivery-option">
               <input type="radio"
+                [checked]="item.deliveryDate === deliveryDate2"
                 class="delivery-option-input"
                 name="delivery-option-{{ item.product.id }}"
                 value="date:{{ deliveryDate2 }},cost:5"
@@ -109,6 +87,7 @@
             </div>
             <div class="delivery-option">
               <input type="radio"
+                [checked]="item.deliveryDate === deliveryDate1"
                 class="delivery-option-input"
                 name="delivery-option-{{ item.product.id }}"
                 value="date:{{ deliveryDate1 }},cost:9.99"
@@ -160,7 +139,7 @@
         <div class="payment-summary-row total-row">
           <div>Order total:</div>
             <div class="payment-summary-money">
-              ${{ formatCurrency((totalCartCost + totalShiping) * 1.1) }}
+              ${{ formatCurrency(totalCartCostTx) }}
             </div>
           </div>
 

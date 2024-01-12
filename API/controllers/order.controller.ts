@@ -118,7 +118,7 @@ const getOrderById = async (req: Request, res: Response) => {
             "created_date": order.created_date,
             "updated_date": order.updated_date,
             "total_cost": order.total_cost,
-            "products": items
+            "items": items
         };
 
         res.status(200).send({
@@ -167,7 +167,7 @@ const addNewOrder = async (req: Request, res: Response) => {
         const newOrder: Order = {
             id: 0,
             user_id: userId,
-            status: "pending",
+            status: "created",
             total_cost: cost,
             created_date: new Date(),
             updated_date: new Date()
@@ -230,8 +230,10 @@ const updateOrder = async (req: Request, res: Response) => {
             });
         }
 
-        if (status && (status ==='prepared' || status ==='sent' || status === 'delivered' || status ==='canceled')) {
-            existingOrder.status = status;
+        if (status && !(status ==='prepared' || status ==='sent' || status === 'delivered' || status ==='canceled')) {
+            return res.status(403).send({
+                message: 'Invalid status'
+            });
         }
 
         if(existingOrder && existingOrder.status === "sent") {

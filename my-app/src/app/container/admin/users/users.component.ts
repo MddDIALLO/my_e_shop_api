@@ -3,6 +3,7 @@ import { UserTable, UsersData } from '../../../models/user.interface';
 import { UserService } from '../../../service/user/user.service';
 import { Message, UpdateDelRes } from '../../../models/response.interface';
 import { HttpClient, HttpResponse  } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-users',
@@ -40,7 +41,8 @@ export class UsersComponent {
     image_url: '',
     isActive: false
   };
-  staticUrl: string = 'http://localhost:3000/static/';
+  private API_URL = environment.API_URL;
+  staticUrl: string = `${this.API_URL}/static/`;
   imageUrl: string | undefined;
 
   constructor(

@@ -20,53 +20,56 @@
     </ul>
   </nav>
 </header> -->
+<div class="header" [class.fixed]="isFixed">
 
-<div class="my-app-header">
-  <div class="my-app-header-left-section">
-    <a routerLink="/" class="header-link">
-      <img class="my-app-logo"
-      src="assets/images/icons/my-app.png">
-      <!-- <img class="my-app-mobile-logo"
-        src="assets/images/icons/my-app.png"> -->
-    </a>
+  <div class="my-app-header">
+    <div class="my-app-header-left-section">
+      <a routerLink="/" class="header-link">
+        <img class="my-app-logo"
+        src="assets/images/icons/my-app.png">
+        <!-- <img class="my-app-mobile-logo"
+          src="assets/images/icons/my-app.png"> -->
+      </a>
+    </div>
+
+    <div class="my-app-header-middle-section">
+      <input class="search-bar" type="text" placeholder="Search">
+
+      <button class="search-button">
+        <img class="search-icon" src="assets/images/icons/search-icon.png">
+      </button>
+    </div>
+
+    <div class="my-app-header-right-section">
+      <a class="orders-link header-link" routerLink="/order">
+        <span class="returns-text">Returns</span>
+        <span class="orders-text">& Orders</span>
+      </a>
+
+      <a class="cart-link header-link" routerLink="/cart" routerLinkActive="active">
+        <img class="cart-icon" src="assets/images/icons/cart-icon.png">
+        <div class="cart-quantity js-cart-quantity">{{ getCartQuantity() }}</div>
+        <div class="cart-text">Cart</div>
+      </a>
+    </div>
+
+    <nav>
+      <ul>
+        <li *ngIf="isLogedIn()" class="connected-user">
+          <ng-container *ngIf="connectedUser.image_url.length > 0; else initials">
+            <img [src]="imageUrlWithTimestamp || staticUrl + 'images/users/' + connectedUser.image_url" alt="User Avatar">
+          </ng-container>
+          <ng-template #initials>
+            <span>{{ connectedUser.username | uppercase | slice: 0:2 }}</span>
+          </ng-template>
+        </li>
+        <li *ngIf="!isHomePage()"><a routerLink="/" routerLinkActive="active">Store</a></li>
+        <li class="login" *ngIf="!isProfilePage() && !isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/profile" routerLinkActive="active">Profile</a></li>
+        <li class="login" *ngIf="isAdmin() && isLogedIn() && !isAdminPage()"><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+        <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && !isLogedIn()"><a routerLink="/login" routerLinkActive="active">Login</a></li>
+        <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/logout" routerLinkActive="active">Logout</a></li>
+      </ul>
+    </nav>
   </div>
 
-  <div class="my-app-header-middle-section">
-    <input class="search-bar" type="text" placeholder="Search">
-
-    <button class="search-button">
-      <img class="search-icon" src="assets/images/icons/search-icon.png">
-    </button>
-  </div>
-
-  <div class="my-app-header-right-section">
-    <a class="orders-link header-link" href="#">
-      <span class="returns-text">Returns</span>
-      <span class="orders-text">& Orders</span>
-    </a>
-
-    <a class="cart-link header-link" routerLink="/cart" routerLinkActive="active">
-      <img class="cart-icon" src="assets/images/icons/cart-icon.png">
-      <div class="cart-quantity js-cart-quantity">{{ getCartQuantity() }}</div>
-      <div class="cart-text">Cart</div>
-    </a>
-  </div>
-
-  <nav>
-    <ul>
-      <li *ngIf="isLogedIn()" class="connected-user">
-        <ng-container *ngIf="connectedUser.image_url.length > 0; else initials">
-          <img [src]="imageUrlWithTimestamp || staticUrl + 'images/users/' + connectedUser.image_url" alt="User Avatar">
-        </ng-container>
-        <ng-template #initials>
-          <span>{{ connectedUser.username | uppercase | slice: 0:2 }}</span>
-        </ng-template>
-      </li>
-      <li *ngIf="!isHomePage()"><a routerLink="/" routerLinkActive="active">Store</a></li>
-      <li class="login" *ngIf="!isProfilePage() && !isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/profile" routerLinkActive="active">Profile</a></li>
-      <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && !isLogedIn()"><a routerLink="/login" routerLinkActive="active">Login</a></li>
-      <li class="login" *ngIf="!isLoginPage() && !isRegisterPage() && isLogedIn()"><a routerLink="/logout" routerLinkActive="active">Logout</a></li>
-      <li class="login" *ngIf="isAdmin() && isLogedIn() && !isAdminPage()"><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
-    </ul>
-  </nav>
 </div>

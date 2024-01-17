@@ -5,3 +5,10 @@ export interface Order_item {
     deliveryDate: string;
     shipping: number;
 }
+
+export interface GotItem {
+    product_id: number; 
+    quantity: number; 
+    deliveryDate: string
+    shipping: number;
+}

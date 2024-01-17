@@ -1,1 +1,50 @@
-<p>order works!</p>
+<div class="container">
+  <div class="table-responsive">
+    <div class="table-wrapper">
+      <div class="table-title">
+        <div class="row">
+          <div class="col-xs-5">
+            <h2 *ngIf="userOrders.length > 0">Orders <b>List</b></h2>
+            <h2 *ngIf="!(userOrders.length > 0)">Empty <b>List</b></h2>
+          </div>
+        </div>
+      </div>
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Created Date</th>
+            <th>Status</th>
+            <th>Products</th>
+            <th>Total Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of userOrders">
+            <td>{{ item.id.toString() + item.user_id.toString() + (item.created_date | date: 'yyyyMMddHHmmss') }}</td>
+            <td>
+              {{ item.created_date  | date: 'dd/MM/yyyy HH:mm:ss' }}
+            </td>
+            <td>{{ item.status }}</td>
+            <td>
+              <ul>
+                <li *ngFor="let product of item.items">
+                  <div class="avatar" *ngIf="(product.product.image_url && product.product.image_url.length > 0)">
+                    <img [src]="staticUrl + 'images/products/' + product.product.image_url">
+                  </div>
+                  <h2>{{ product.product.name }}</h2>
+                  <p>Quantity: {{ product.quantity }}</p>
+                  <p>Price: ${{ product.product.price }}</p>
+                  <p>Shipping: ${{ product.shipping }}</p>
+                </li>
+              </ul>
+            </td>
+            <td>
+              {{ item.total_cost }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

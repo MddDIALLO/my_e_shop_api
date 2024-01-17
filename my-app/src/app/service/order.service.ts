@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Order_Item } from '../models/order.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -19,24 +20,16 @@ export class OrderService {
 
   addNewOrder(options:
     {
-      user_id?: string,
-      products?: number[],
-      deliveryDate?: string,
-      shipping?: number
+      user_id?: number,
+      items?: Order_Item[]
     }): Observable<any> {
     const newOrder: any = {};
 
     if (options.user_id !== undefined && options.user_id !== null) {
       newOrder.user_id = options.user_id;
     }
-    if (options.products !== undefined && options.products !== null) {
-      newOrder.products = options.products;
-    }
-    if (options.deliveryDate !== undefined && options.deliveryDate !== null) {
-      newOrder.deliveryDate = options.deliveryDate;
-    }
-    if (options.shipping !== undefined && options.shipping !== null) {
-      newOrder.shipping = options.shipping;
+    if (options.items !== undefined && options.items.length > 0) {
+      newOrder.items = options.items;
     }
 
     return this.http.post<any>(`${this.API_URL}/api/orders`, newOrder, this.options);

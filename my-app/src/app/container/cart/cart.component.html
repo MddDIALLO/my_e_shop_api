@@ -1,7 +1,8 @@
 <div class="main">
-  <div class="page-title">Review your order</div>
+  <div *ngIf="!placingOrder && cart.items.length > 0" class="page-title">Review your order</div>
+  <div *ngIf="!placingOrder && !(cart.items.length > 0)" class="page-title">Empty Cart</div>
 
-  <div class="checkout-grid">
+  <div *ngIf="!placingOrder  && cart.items.length > 0" class="checkout-grid">
     <div class="order-summary js-order-summary">
       <div class="cart-item-container" *ngFor="let item of cart.items">
         <div class="delivery-date">
@@ -142,8 +143,37 @@
               ${{ formatCurrency(totalCartCostTx) }}
             </div>
           </div>
-
-        <button class="place-order-button button-primary"> Place your order </button>
+          <p *ngIf="reqIssue" class="text-danger">{{ reqIssueMessage }}</p>
+        <button (click)="showPlacingOrderForm()" class="place-order-button button-primary"> Place your order </button>
     </div>
   </div>
+
+  <div *ngIf="placingOrder" class="credit-card-form">
+    <div class="page-title">Enter Credit Card Information</div>
+
+    <form (ngSubmit)="submitCreditCardForm()" #creditCardForm="ngForm">
+      <div>
+        <label for="cardNumber">Card Number:</label>
+        <input type="text" id="cardNumber" name="cardNumber" [(ngModel)]="creditCard.cardNumber" required (ngModelChange)="checkCardNumber()">
+        <div *ngIf="!validCN && creditCard.cardNumber" class="text-danger">Invalid card number</div>
+      </div>
+
+      <div>
+          <label for="expiryDate">Expiry Date:</label>
+          <input type="text" id="expiryDate" name="expiryDate" [(ngModel)]="creditCard.expiryDate" required (ngModelChange)="checkExpiry()">
+          <div *ngIf="!validCEXP && creditCard.expiryDate" class="text-danger">Invalid expiry date</div>
+      </div>
+
+      <div>
+          <label for="cvv">CVV:</label>
+          <input type="text" id="cvv" name="cvv" [(ngModel)]="creditCard.cvv" required (ngModelChange)="checkCvv()">
+          <div *ngIf="!validCVV && creditCard.cvv" class="text-danger">Invalid CVV</div>
+      </div>
+
+      <button type="submit" [disabled]="creditCardForm.invalid">Submit Payment</button>
+    </form>
+    <p *ngIf="reqSuccess" class="text-success">{{ reqSuccessMessage }}</p>
+    <p *ngIf="reqIssue" class="text-danger">{{ reqIssueMessage }}</p>
+    <button (click)="hidePlacingOrderForm()">Cancel</button>
+</div>
 </div>

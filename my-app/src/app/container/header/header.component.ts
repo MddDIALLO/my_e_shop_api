@@ -5,6 +5,8 @@ import { RefreshService } from '../../service/refresh.service';
 import { Rep } from '../../models/response.interface';
 import { Cart } from '../../models/product.interface';
 import { CartService } from '../../service/cart.service';
+import { SharedScrollService } from '../../service/shared-scroll.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -12,9 +14,10 @@ import { CartService } from '../../service/cart.service';
   styleUrl: './header.component.css'
 })
 export class HeaderComponent {
+  private API_URL = environment.API_URL;
+  staticUrl: string = `${this.API_URL}/static/`;
   tokenStatus: string = '';
   userRole: string = '';
-  staticUrl: string = 'http://localhost:3000/static/';
   connectedUser: any = {
     id: 0,
     username: '',
@@ -22,16 +25,14 @@ export class HeaderComponent {
     role: '',
     image_url: ''
   }
-  // cart: Cart = {
-  //   items : []
-  // };
-  // cartQuantity: number = 0;
+  isFixed = false;
 
   constructor(
     private validateToken: ValidateTokenService,
     private router: Router,
     private cartService: CartService,
-    private refreshService: RefreshService
+    private refreshService: RefreshService,
+    private sharedScrollService: SharedScrollService
   ) {}
 
   ngOnInit(): void {
@@ -40,6 +41,10 @@ export class HeaderComponent {
     this.refreshService.refresh.subscribe(() => {
       this.checkTokenValidity();
       this.checkRole();
+    });
+
+    this.sharedScrollService.getScrollObservable().subscribe((scrolling) => {
+      this.isFixed = scrolling;
     });
   }
 

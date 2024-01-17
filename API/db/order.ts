@@ -159,6 +159,7 @@ const addNewOrderItem = (newOrderItem: Order_item): Promise<number> => {
             conn.query("INSERT INTO order_items SET ?", newOrderItem, (err, result: OkPacket) => {
                 conn.release();
                 if (err) {
+                    console.log(err);
                     return resolve(0);
                 }
                 return resolve(1);

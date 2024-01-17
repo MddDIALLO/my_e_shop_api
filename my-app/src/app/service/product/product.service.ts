@@ -23,8 +23,6 @@ export class ProductService {
       name?: string,
       description?: string,
       price?: number,
-      made_date?: Date,
-      expiry_date?: Date,
       image_url?: string
     }): Observable<any> {
     const newProduct: any = {};
@@ -37,12 +35,6 @@ export class ProductService {
     }
     if (options.price !== undefined && options.price !== null) {
       newProduct.price = options.price;
-    }
-    if (options.made_date !== undefined && options.made_date !== null) {
-      newProduct.made_date = options.made_date;
-    }
-    if (options.expiry_date !== undefined && options.expiry_date !== null) {
-      newProduct.expiry_date = options.expiry_date;
     }
     if (options.image_url !== undefined && options.image_url !== null) {
       newProduct.image_url = options.image_url;
@@ -56,8 +48,6 @@ export class ProductService {
       name?: string,
       description?: string,
       price?: number,
-      made_date?: Date,
-      expiry_date?: Date,
       image_url?: string
     }): Observable<any> {
     const newProduct: any = {};
@@ -70,12 +60,6 @@ export class ProductService {
     }
     if (options.price !== undefined && options.price !== null) {
       newProduct.price = options.price;
-    }
-    if (options.made_date !== undefined && options.made_date !== null) {
-      newProduct.made_date = options.made_date;
-    }
-    if (options.expiry_date !== undefined && options.expiry_date !== null) {
-      newProduct.expiry_date = options.expiry_date;
     }
     if (options.image_url !== undefined && options.image_url !== null) {
       newProduct.image_url = options.image_url;

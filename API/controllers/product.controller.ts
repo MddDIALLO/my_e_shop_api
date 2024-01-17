@@ -44,7 +44,7 @@ const getProductById = async (req: Request, res: Response) => {
 
 const addNewProduct = async (req: Request, res: Response) => {
     try {
-        const { name, description, price, made_date, expiry_date, image_url } = req.body;
+        const { name, description, price, image_url } = req.body;
 
         const currentDate = new Date();
         const madeDate = new Date(currentDate.getTime() - (10 * 24 * 60 * 60 * 1000));
@@ -90,14 +90,6 @@ const addNewProduct = async (req: Request, res: Response) => {
             return res.status(400).send({ message: 'Poduct price is required' });
         }
 
-        if(made_date) {
-            newProduct.made_date = made_date;
-        }
-
-        if(expiry_date) {
-            newProduct.expiry_date = expiry_date;
-        }
-
         if(image_url && image_url.length >= 5) {
             newProduct.image_url = image_url;
         } 
@@ -121,7 +113,7 @@ const addNewProduct = async (req: Request, res: Response) => {
 const updateExistingProduct = async (req: Request, res: Response) => {
     try {
         const productId = Number(req.params.id);
-        const { name, description, price, made_date, expiry_date, image_url } = req.body;
+        const { name, description, price, image_url } = req.body;
         let updatedProduct: Product = {
             id: 0,
             name: '',
@@ -162,14 +154,6 @@ const updateExistingProduct = async (req: Request, res: Response) => {
             } else {
                 return res.status(400).send({ message: 'Invalid Poduct price' });
             }
-        }
-
-        if(made_date) {
-            updatedProduct.made_date = made_date;
-        }
-
-        if(expiry_date) {
-            updatedProduct.expiry_date = expiry_date;
         }
 
         if(image_url && image_url.length >= 5) {

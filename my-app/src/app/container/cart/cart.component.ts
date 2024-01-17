@@ -1,9 +1,14 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import 'angular-credit-cards';
 import { Cart, Item, Product } from '../../models/product.interface';
 import { CartService } from '../../service/cart.service';
 import { RefreshService } from '../../service/refresh.service';
-import { ValidateTokenService } from '../../service/user/validate-token.service';
+import { Message, Rep, UpdateDelRes } from '../../models/response.interface';
+import { Order_Item } from '../../models/order.interface';
+import { OrderService } from '../../service/order.service';
+import { environment } from '../../../environments/environment';
+
 
 @Component({
   selector: 'app-cart',
@@ -14,7 +19,8 @@ export class CartComponent {
   cart: Cart = {
     items: []
   };
-  staticUrl: string = 'http://localhost:3000/static/';
+  private API_URL = environment.API_URL;
+  staticUrl: string = `${this.API_URL}/static/`;
   deliveryDate: { [id: number]: string } = {};
   shipping: { [id: number]: number } = {};
   totalShiping: number = 0;
@@ -26,21 +32,56 @@ export class CartComponent {
   deliveryDate3: string = '';
   isEditingQuantity: { [id: number]: boolean } = {};
   selectedItem: { [id: number]: Item } = {};
+  connectedUser: any = {
+    id: 0,
+    username: '',
+    email: '',
+    role: '',
+    image_url: ''
+  }
+  placingOrder: boolean = false;
+  creditCard: any = {
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
+  };
+  creditCardNumberRegex = /^(\d{4})\s?(\d{4})\s?(\d{4})\s?(\d{4})$/;
+  validCN: boolean = false;
+  creditCardExpireRegex = /^(0[1-9]|1[0-2])\/(20[2-9][0-9]|2[1-9][0-9]{2})$/;
+  validCEXP: boolean = false;
+  creditCardCvvRegex = /^\d{3,4}$/;
+  validCVV: boolean = false;
+  isConfirming: boolean = false;
+  reqIssue: boolean = false;
+  reqIssueMessage: string = '';
+  reqSuccess: boolean = false;
+  reqSuccessMessage: string = '';
 
   constructor(
     private _cartService: CartService,
     private router: Router,
-    private _refreshService: RefreshService
+    private _refreshService: RefreshService,
+    private _orderService: OrderService
   ) {
     this.getCart();
     this._refreshService.triggerRefresh();
-    // this.setDefaultIsEdit();
-    // this.setDeliveryDates();
     this.setDefaultValues();
+    this.getConnectedUser();
 
     // if(localStorage.getItem('cart')) {
     //   localStorage.removeItem('cart');
     // }
+  }
+
+  getConnectedUser() {
+    const tokenData: string | null = localStorage.getItem('token');
+    let role: string = '';
+
+    if (tokenData) {
+      const parsedTokenData: Rep = JSON.parse(tokenData);
+      role = parsedTokenData.connectedUser.role;
+      this.connectedUser = parsedTokenData.connectedUser;
+    }
   }
 
   getCart() {
@@ -51,6 +92,18 @@ export class CartComponent {
       this.getTotalCartItemsAndCosts();
       this.getTotalCartShiping();
     }
+  }
+
+  getCartItems(): Item[] | null {
+    const cart: Cart = this._cartService.getCart();
+
+    if(cart){
+      const cartItems: Item[] = cart.items;
+
+      return cartItems;
+    }
+
+    return null;
   }
 
   removeFromCart(product: Product) {
@@ -178,14 +231,6 @@ export class CartComponent {
     this.deliveryDate3 = this.addDays(7).toDateString();
   }
 
-  // setDefaultIsEdit() {
-  //   if(this.cart.items.length > 0) {
-  //     this.cart.items.forEach((cartItem) => {
-  //       this.isEditingQuantity[cartItem.product.id] = false;
-  //     });
-  //   }
-  // }
-
   getTotalCartItemsAndCosts() {
     if(this.cart.items.length > 0) {
       this.totalCartItems = this.cart.items.length;
@@ -205,6 +250,99 @@ export class CartComponent {
       this.cart.items.forEach((item) => {
         this.totalShiping += item.shipping;
       })
+    }
+  }
+
+  showPlacingOrderForm() {
+    if(this.cart.items.length > 0) {
+      if(this.connectedUser.id > 0) {
+        this.placingOrder = true;
+      } else {
+        this.router.navigate(['/login']);
+      }
+    } else {
+      this.reqIssue = true;
+      this.reqIssueMessage = 'Empty Cart'
+    }
+  }
+
+  hidePlacingOrderForm() {
+    this.placingOrder = false;
+  }
+
+  createOrder(user_id?: number) {
+    let newOrderItems: Order_Item[] = [];
+
+    for (const item of this.cart.items) {
+      newOrderItems.push(
+        {
+          product_id: item.product.id,
+          quantity: item.quantity,
+          deliveryDate: item.deliveryDate,
+          shipping: item.shipping
+        }
+        );
+    }
+
+    if(newOrderItems.length > 0) {
+      this._orderService.addNewOrder({ user_id, items:newOrderItems }).subscribe(
+        (response) => {
+          const responseData: any = response;
+          const data: UpdateDelRes = JSON.parse(responseData);
+          if(data.message === 'New order created') {
+            this.reqSuccess = true;
+            this.reqSuccessMessage = data.message;
+            localStorage.removeItem('cart');
+            this.getCart();
+          }
+        },
+        (error) => {
+          const errorData: any = error;
+          const message: Message = JSON.parse(errorData);
+          this.reqIssue = true;
+          this.reqIssueMessage = message.message;
+        }
+      );
+    } else {
+      this.reqIssue = true;
+      this.reqIssueMessage = 'Invalid cart';
+    }
+
+    setTimeout(() => {
+      if(this.reqSuccess) {
+        this.reqSuccess = false;
+        this.router.navigate(['/order']);
+      }
+      if(this.reqIssue) {
+        this.reqIssue = false;
+      }
+
+      this.hidePlacingOrderForm();
+    }, 2000);
+  }
+
+  checkCardNumber() {
+    this.validCN = this.creditCardNumberRegex.test(this.creditCard.cardNumber);
+  }
+
+  checkExpiry() {
+    this.validCEXP = this.creditCardExpireRegex.test(this.creditCard.expiryDate);
+  }
+
+  checkCvv() {
+    this.validCVV = this.creditCardCvvRegex.test(this.creditCard.cvv);
+  }
+
+  formatCardNumber() {
+    this.checkCardNumber();
+    const sanitizedInput = this.creditCard.cardNumber.replace(/\D/g, '');
+    const formattedInput = sanitizedInput.replace(/(\d{4})/g, '$1 ');
+    this.creditCard.cardNumber = formattedInput.trim();
+  }
+
+  submitCreditCardForm() {
+    if(this.validCN && this.validCEXP && this.validCVV) {
+      this.createOrder(this.connectedUser.id);
     }
   }
 }

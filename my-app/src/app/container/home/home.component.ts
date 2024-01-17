@@ -4,6 +4,7 @@ import { RefreshService } from '../../service/refresh.service';
 import { Product, productsData, Cart, Item } from '../../models/product.interface';
 import { ProductService } from '../../service/product/product.service';
 import { CartService } from '../../service/cart.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -29,7 +30,8 @@ export class HomeComponent {
     expiry_date: new Date,
     image_url: ''
   };
-  staticUrl: string = 'http://localhost:3000/static/';
+  private API_URL = environment.API_URL;
+  staticUrl: string = `${this.API_URL}/static/`;
   deliveryDate: string = '';
 
   constructor(

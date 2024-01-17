@@ -26,8 +26,6 @@
             <th>Name</th>
             <th>Description</th>
             <th>Price</th>
-            <th>Made Date</th>
-            <th>Expiry Date</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -46,8 +44,6 @@
             </td>
             <td>{{ product.description }}</td>
             <td>{{ product.price }}</td>
-            <td>{{ product.made_date | date: 'MM/dd/yyyy' }}</td>
-            <td>{{ product.expiry_date | date: 'MM/dd/yyyy' }}</td>
             <td>
               <div class="button-group">
                 <button class="settings" (click)="showEditProductForm(product.id)" title="Edit" data-toggle="tooltip">
@@ -91,14 +87,9 @@
         <label for="price">Price:</label>
         <input type="number" id="price" name="price" [(ngModel)]="selectedProduct.price">
 
-        <label for="made_date">Made Date:</label>
-        <input type="date" id="made_date" name="made_date" [(ngModel)]="selectedProduct.made_date">
-
-        <label for="expiry_date">Expiry Date:</label>
-        <input type="date" id="expiry_date" name="expiry_date" [(ngModel)]="selectedProduct.expiry_date">
-
         <label for="imageUrl">New Image</label>
-        <input type="file" id="image" name="image" (change)="onImageChange($event)" accept="image/*">
+        <input type="file" id="image" name="image" (change)="onImageChange($event)" accept="image/*" capture="camera">
+        <!-- <button (click)="openCamera(image)">Open Camera</button> -->
 
         <button *ngIf="!reqSuccess && !reqIssue" type="submit">Update</button>
         <button *ngIf="!reqSuccess && !reqIssue" type="button" (click)="cancelEditProduct()">Cancel</button>
@@ -117,12 +108,6 @@
 
         <label for="price">Price:</label>
         <input type="number" id="price" name="price" [(ngModel)]="newProduct.price" required>
-
-        <label for="made_date">Made Date:</label>
-        <input type="date" id="made_date" name="made_date" [(ngModel)]="newProduct.made_date" required>
-
-        <label for="expiry_date">Expiry Date:</label>
-        <input type="date" id="expiry_date" name="expiry_date" [(ngModel)]="newProduct.expiry_date" required>
 
         <button *ngIf="!reqSuccess && !reqIssue" type="submit">Add</button>
         <button *ngIf="!reqSuccess && !reqIssue" type="button" (click)="hideAddingProductForm()">Cancel</button>

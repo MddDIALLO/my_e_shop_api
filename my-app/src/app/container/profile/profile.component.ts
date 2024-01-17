@@ -5,6 +5,7 @@ import { RefreshService } from '../../service/refresh.service';
 import { UserService } from '../../service/user/user.service';
 import { User } from '../../models/user.interface';
 import { ImageService } from '../../service/image.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -38,7 +39,8 @@ export class ProfileComponent {
     image_url: '',
     isActive: false
   };
-  staticUrl: string = 'http://localhost:3000/static/';
+  private API_URL = environment.API_URL;
+  staticUrl: string = `${this.API_URL}/static/`;
 
   constructor(
     private _userService: UserService,

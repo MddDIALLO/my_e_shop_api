@@ -4,7 +4,7 @@ import productDB from '../db/product';
 import { Product, Item } from '../models/product';
 import orderDB from '../db/order';
 import { Order } from '../models/order';
-import { Order_item } from '../models/order_item';
+import { GotItem, Order_item } from '../models/order_item';
 
 const getAllOrders = async (req: Request, res: Response) => {
     try {
@@ -18,43 +18,43 @@ const getAllOrders = async (req: Request, res: Response) => {
 
         const ordersReturnedList: any[] = [];
 
-        for (const orderItem of ordersList) {
-            const orderItems: Order_item[] = await orderDB.getAllOrderItems(orderItem.id);
+        for (const order of ordersList) {
             const items: Item[] = [];
-            const fetchedItem: Item = {
-                product: {
-                    id: 0,
-                    name: '',
-                    description: '',
-                    price: 0.00,
-                    made_date: new Date(),
-                    expiry_date: new Date(),
-                    image_url: ''
-                },
-                quantity: 0,
-                deliveryDate: '',
-                shipping: 0
-            }
+            const orderItems: Order_item[] = await orderDB.getAllOrderItems(order.id);
 
-            for (const orderItemDetail of orderItems) {
-                const fetchedProduct: Product | null = await productDB.getProductById(orderItemDetail.product_id);
-
+            for (const orderItem of orderItems) {
+                const fetchedItem: Item = {
+                    product: {
+                        id: 0,
+                        name: '',
+                        description: '',
+                        price: 0.00,
+                        made_date: new Date(),
+                        expiry_date: new Date(),
+                        image_url: ''
+                    },
+                    quantity: 0,
+                    deliveryDate: '',
+                    shipping: 0
+                };
+            
+                const fetchedProduct: Product | null = await productDB.getProductById(orderItem.product_id);
                 if (fetchedProduct) {
                     fetchedItem.product = fetchedProduct;
-                    fetchedItem.quantity = orderItemDetail.quantity;
-                    fetchedItem.deliveryDate = orderItemDetail.deliveryDate;
-                    fetchedItem.shipping = orderItemDetail.shipping;
+                    fetchedItem.quantity = orderItem.quantity;
+                    fetchedItem.deliveryDate = orderItem.deliveryDate;
+                    fetchedItem.shipping = orderItem.shipping;
                     items.push(fetchedItem);
                 }
-            }
+            }            
 
             ordersReturnedList.push({
-                "id": orderItem.id,
-                "user_id": orderItem.user_id,
-                "status": orderItem.status,
-                "created_date": orderItem.created_date,
-                "updated_date": orderItem.updated_date,
-                "total_cost": orderItem.total_cost,
+                "id": order.id,
+                "user_id": order.user_id,
+                "status": order.status,
+                "created_date": order.created_date,
+                "updated_date": order.updated_date,
+                "total_cost": order.total_cost,
                 "items": items
             });
         }
@@ -84,6 +84,8 @@ const getOrderById = async (req: Request, res: Response) => {
 
         const orderItems: Order_item[] = await orderDB.getAllOrderItems(order.id);
         const items: Item[] = [];
+
+        for (const orderItem of orderItems) {
             const fetchedItem: Item = {
                 product: {
                     id: 0,
@@ -98,8 +100,6 @@ const getOrderById = async (req: Request, res: Response) => {
                 deliveryDate: '',
                 shipping: 0
             }
-
-        for (const orderItem of orderItems) {
             const fetchedProduct: Product | null = await productDB.getProductById(orderItem.product_id);
 
             if (fetchedProduct) {
@@ -135,20 +135,22 @@ const getOrderById = async (req: Request, res: Response) => {
 
 const addNewOrder = async (req: Request, res: Response) => {
     try {
-        const { user_id, products, deliveryDate, shipping } = req.body;
+        const { user_id, items } = req.body;
         let cost: number = 0;
         let userId : number = 0;
         
         if(!req.addOrderAdmin) {
-            if(!products) {
+            if(!items) {
                 return res.status(400).send({ 
-                    message: 'You must add products for any order like this { products: [{product_id, quantity, deliveryDate, shipping},] } ' });
+                    message: 'You must add items for any order like this { items: [{product_id, quantity, deliveryDate, shipping},] } ' });
             }
         } else {
-            if(!products || !user_id) {
-                return res.status(400).send({ message: 'You must add products for any order like this { user_id: user_id, products: [{product_id, quantity},] } ' });
+            if(!items || !user_id) {
+                return res.status(400).send({ message: 'You must add items for any order like this { user_id: user_id, items: [{product_id, quantity, deliveryDate, shipping},] } ' });
             }
         }
+
+        const gotOrderItems: GotItem[] = items;
 
         if(!req.addOrderAdmin) {
             userId = req.user?.id;
@@ -156,7 +158,7 @@ const addNewOrder = async (req: Request, res: Response) => {
             userId = Number(user_id);
         }
 
-        for (const item of products) {
+        for (const item of gotOrderItems) {
             const product: Product | null = await productDB.getProductById(item.product_id);
             
             if(product) {
@@ -177,31 +179,40 @@ const addNewOrder = async (req: Request, res: Response) => {
 
         try {
             const insertedId = await orderDB.addNewOrder(newOrder);
-
-            console.log("Order added successfully", insertedId);
             orderID = insertedId;
             newOrder.id = insertedId;
         } catch (error) {
-            console.error('Error adding Order:', error);
             res.status(500).send({ message: 'Failed to add Order' });
         }
 
-        for (const productData of products) {
-            const { product_id, quantity } = productData;
+        let totalInsertedItems: number = 0;
+
+        for (const productData of gotOrderItems) {
             const newOrderItem: Order_item = {
                 order_id: orderID,
-                product_id,
-                quantity,
-                deliveryDate,
-                shipping
+                product_id: productData.product_id,
+                quantity: productData.quantity,
+                deliveryDate: productData.deliveryDate,
+                shipping: productData.shipping
             }
 
             try {
-                const insertedId = await orderDB.addNewOrderItem(newOrderItem);
-                console.log("Order Item added successfully", insertedId)
+                const reqResult = await orderDB.addNewOrderItem(newOrderItem);
+                 
+                if(!reqResult) {
+                    console.log("Impossible to add Order Item")
+                    continue;
+                } else {
+                    totalInsertedItems += 1;
+                }
+               
             } catch (error) {
                 console.error('Error adding Order_item:', error);
             }
+        }
+
+        if(!(gotOrderItems.length === totalInsertedItems)) {
+            return res.status(500).send({ message: 'Failed to add Order Items' });
         }
 
         res.status(201).send({

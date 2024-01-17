@@ -201,3 +201,70 @@
 .delete-quantity-link, .update-quantity-link {
   cursor: pointer;
 }
+
+
+.credit-card-form {
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 30px;
+  margin-top: 140px;
+  margin-bottom: 100px;
+}
+
+.credit-card-form h2 {
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 18px;
+}
+
+.credit-card-form form {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 12px;
+}
+
+.credit-card-form label {
+  font-weight: 700;
+}
+
+.credit-card-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid rgb(222, 222, 222);
+  border-radius: 4px;
+}
+
+.credit-card-form button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #007600; /* Green color, you can change it */
+  color: #fff;
+  cursor: pointer;
+}
+
+.credit-card-form button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.credit-card-form button + button {
+  margin-top: 11px;
+  background-color: #dc3545; /* Red color, you can change it */
+}
+
+.credit-card-form button:hover,
+.credit-card-form button + button:hover {
+  opacity: 0.9;
+}
+
+.credit-card-form button + button {
+  margin-top: 11px;
+}
+
+.credit-card-form button,
+.credit-card-form button + button {
+  margin-bottom: 15px;
+}
